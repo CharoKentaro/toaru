@@ -63,7 +63,7 @@ def show_tool(gemini_api_key, speech_api_key):
         )
         
         # ↓↓↓ あなたのロリポップサーバーに設置した、continue.htmlのURLを正確に設定してください ↓↓↓
-        portal_url = "https://https://experiment-site.pray-power-is-god-and-cocoro.com/continue.html" 
+        portal_url = "https://experiment-site.pray-power-is-god-and-cocoro.com/continue.html" 
         st.link_button("応援ページに移動して、翻訳を続ける", portal_url, type="primary")
         
     else:
