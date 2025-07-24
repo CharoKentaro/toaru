@@ -56,7 +56,7 @@ def show_tool(gemini_api_key):
         time.sleep(1)
         st.rerun()
 
-    st.header("🤝 フレンドリー翻訳ツール", divider='rainbow')
+    st.header("🤝 翻訳ツール", divider='rainbow')
 
     if "translator_results" not in st.session_state: st.session_state.translator_results = []
     if "translator_last_mic_id" not in st.session_state: st.session_state.translator_last_mic_id = None
