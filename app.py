@@ -4,11 +4,11 @@ import time
 from tools import translator_tool
 
 # 1. アプリの基本設定
-st.set_page_config(page_title="🤝 フレンドリー翻訳ツール", page_icon="🤝", layout="wide")
+st.set_page_config(page_title="翻訳ツール", page_icon="🤝", layout="wide")
 
 # 2. サイドバー (APIキー管理の司令塔)
 with st.sidebar:
-    st.title("🤝 フレンドリー翻訳")
+    st.title("🤝 翻訳ツール")
     st.divider()
 
     # --- LocalStorageの準備 (成功コードからの叡智) ---
