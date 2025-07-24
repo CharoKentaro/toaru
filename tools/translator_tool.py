@@ -2,9 +2,10 @@ import streamlit as st
 import google.generativeai as genai
 from streamlit_mic_recorder import mic_recorder
 import time
+import io # ioライブラリをインポート
 
 # ===============================================================
-# 補助関数 (『叡智Ⅲ:神の一閃』を適用した、AI統合バージョン)
+# 補助関数 (最新のライブラリ仕様に対応した、最終バージョン)
 # ===============================================================
 def translate_with_gemini(content_to_process, api_key):
     if not content_to_process or not api_key:
@@ -14,15 +15,19 @@ def translate_with_gemini(content_to_process, api_key):
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
-        system_prompt = "あなたは非常に優秀な翻訳アシスタントです。ユーザーから渡された日本語を、海外の親しい友人との会話で使われるような、自然でカジュアルでありながら礼儀正しい英語に翻訳してください。- 非常に硬い表現や、ビジネス文書のような翻訳は避けてください。- 翻訳後の英語テキストのみを回答し、他の言葉は一切含めないでください。"
+        system_prompt = "あなたは非常に優秀な翻訳アシスタントです。ユーザーから渡された日本語を、海外の親しい友人との会話で使われるような、自然でカジュアルでありながら礼儀正しく、そしてフレンドリーな英語に翻訳してください。- 非常に硬い表現や、ビジネス文書のような翻訳は避けてください。- 翻訳後の英語テキストのみを回答し、他の言葉は一切含めないでください。"
 
         if isinstance(content_to_process, str):
             original_text = content_to_process
             request_contents = [system_prompt, original_text]
         elif isinstance(content_to_process, bytes):
             original_text = "(音声入力)"
-            # ★★★ AIに「webm形式で送る」と伝えている、重要な箇所 ★★★
-            audio_file = genai.upload_file(contents=content_to_process, mime_type='audio/webm')
+            
+            # ★★★ ここが、今回の、絶対的な、修正点です ★★★
+            # 古い 'contents' 引数から、最新の 'file' 引数に修正する
+            # また、バイトデータをファイルのように扱うためにio.BytesIOを使用する
+            audio_file = genai.upload_file(file=io.BytesIO(content_to_process), mime_type='audio/webm')
+            
             request_contents = [system_prompt, "この日本語の音声を翻訳してください:", audio_file]
         else:
             return None, None
@@ -31,11 +36,12 @@ def translate_with_gemini(content_to_process, api_key):
         return original_text, response.text.strip()
 
     except Exception as e:
-        st.error(f"AI処理エラー: {e}")
+        # エラーメッセージをより具体的に表示
+        st.error(f"AI処理エラーが発生しました: {e}")
         return None, None
 
 # ===============================================================
-# 専門家のメインの仕事 (『叡智の集大成』バージョン)
+# 専門家のメインの仕事 (変更なし、私たちの叡智の集大成)
 # ===============================================================
 def show_tool(gemini_api_key):
     if st.query_params.get("unlocked") == "true":
@@ -77,8 +83,6 @@ def show_tool(gemini_api_key):
 
         col1, col2 = st.columns([1, 2])
         with col1:
-            # ★★★ ここが、今回の唯一にして、絶対的な修正点です ★★★
-            # AIへの指示と、実際の納品物の形式を「webm」に統一する
             audio_info = mic_recorder(start_prompt="🎤 話し始める", stop_prompt="⏹️ 翻訳する", key='translator_mic', format="webm")
         with col2:
             st.text_input("または、ここに日本語を入力してEnter...", key="translator_text", on_change=handle_text_input)
@@ -104,7 +108,8 @@ def show_tool(gemini_api_key):
                     st.rerun()
                 else:
                     st.session_state.translator_last_input = ""
-                    st.warning("翻訳に失敗しました。もう一度お試しください。")
+                    # 警告メッセージは補助関数内で表示されるため、ここでは不要
+                    # st.warning("翻訳に失敗しました。もう一度お試しください。")
 
         if st.session_state.translator_results:
             st.write("---")
