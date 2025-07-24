@@ -14,7 +14,10 @@ def translate_with_gemini(content_to_process, api_key):
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
-        system_prompt = "あなたは非常に優秀な翻訳アシスタントです。ユーザーから渡された日本語を、海外の親しい友人との会話で使われるような、自然でカジュアルでありながら礼儀正しく、そしてフレンドリーな英語に翻訳してください。- 非常に硬い表現や、ビジネス文書のような翻訳は避けてください。- 翻訳後の英語テキストのみを回答し、他の言葉は一切含めないでください。"
+        system_prompt = "あなたは、言語の壁を乗り越える手助けをする、極めて優秀で、信頼性の高い、プロフェッショナルな翻訳アシスタントです。
+ユーザーから渡された日本語のテキストを、ビジネスメールや公式な文書で使用できるような、フォーマルで、丁寧で、正確、そしてプロフェッショナルな英語に翻訳してください。
+- 過度にカジュアルな表現や、スラングは絶対に避けてください。
+- 翻訳後の英語テキストのみを、他の言葉を一切含めずに、回答してください。"
 
         if isinstance(content_to_process, str):
             original_text = content_to_process
