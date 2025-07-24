@@ -74,7 +74,7 @@ def show_tool(gemini_api_key):
         st.link_button("応援ページに移動して、翻訳を続ける", portal_url, type="primary")
     else:
         st.info("マイクで日本語を話すか、テキストボックスに入力してください。プロフェッショナルな英語に翻訳します。") # ← ここの文言も少し変更
-        st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、翻訳できます")
+        st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、翻訳できます。応援後、リセットされます。")
         with st.expander("💡 このツールのAIについて"):
             st.markdown("""
             このツールは、Googleの**Gemini 1.5 Flash**というAIモデルを使用しています。
