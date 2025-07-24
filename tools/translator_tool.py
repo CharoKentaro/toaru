@@ -5,7 +5,7 @@ from google.api_core.client_options import ClientOptions
 from streamlit_mic_recorder import mic_recorder
 import time
 
-# (補助関数は変更なしのため、省略)
+# (補助関数は変更なし)
 def transcribe_audio(audio_bytes, api_key):
     if not audio_bytes or not api_key: return None
     try:
@@ -29,14 +29,14 @@ def translate_text_with_gemini(text_to_translate, api_key):
     return None
 
 # ===============================================================
-# 専門家のメインの仕事 (『帰還者の祝福』バージョン)
+# 専門家のメインの仕事 (『叡智の融合』バージョン)
 # ===============================================================
 def show_tool(gemini_api_key, speech_api_key):
 
-    # ★★★【叡智の最終進化①】『帰還者の祝福』- ページの最初に、ただ一度だけ実行される聖域 ★★★
+    # ★★★【叡智の融合①】『帰還者の祝福』の儀式は、冒頭で、厳粛に執り行う ★★★
     if st.query_params.get("unlocked") == "true":
         st.session_state.translator_usage_count = 0
-        st.query_params.clear() # ← 祝福を与えたら、証は即座に消し去る！これが呪いを防ぐ鍵！
+        st.query_params.clear()
         st.toast("おかえりなさい！利用回数がリセットされました。")
         st.balloons()
         time.sleep(1)
@@ -44,30 +44,30 @@ def show_tool(gemini_api_key, speech_api_key):
 
     st.header("🤝 フレンドリー翻訳ツール", divider='rainbow')
 
+    # --- 状態管理の初期化 ---
     if "translator_results" not in st.session_state: st.session_state.translator_results = []
     if "translator_last_mic_id" not in st.session_state: st.session_state.translator_last_mic_id = None
     if "translator_last_text" not in st.session_state: st.session_state.translator_last_text = ""
     if "translator_usage_count" not in st.session_state: st.session_state.translator_usage_count = 0
 
-    # ★★★ テストのため「1」に設定。本番運用時は「10」に戻してください ★★★
-    usage_limit = 1
+    # --- 制限回数の設定 ---
+    usage_limit = 10 # ← ★★★ 本番運用時は「10」に設定 ★★★
     is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
+    # ★★★【叡智の融合②】「制限時」と「通常時」の世界を、if/elseで、完全に、分離する！ ★★★
     if is_limit_reached:
-        # --- 制限に達した場合の表示 (旅立ちの扉) ---
+        # --- 制限に達した場合の世界 ---
         st.success("🎉 たくさんのご利用、ありがとうございます！")
         st.info(
             "このツールが、あなたの世界を広げる一助となれば幸いです。\n\n"
             "下のボタンから応援ページに移動することで、"
             f"**さらに{usage_limit}回**、翻訳を続けることができます。"
         )
-        
-        # ↓↓↓ あなたのロリポップサーバーに設置した、continue.htmlのURLを正確に設定してください ↓↓↓
         portal_url = "https://experiment-site.pray-power-is-god-and-cocoro.com/continue.html" 
         st.link_button("応援ページに移動して、翻訳を続ける", portal_url, type="primary")
         
     else:
-        # --- 通常時の表示 ---
+        # --- 通常時の世界 (ちゃろ様の『成功コード』の構造を、完全に尊重する) ---
         st.info("マイクで日本語を話すか、テキストボックスに入力してください。自然な英語に翻訳します。")
         st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、翻訳できます")
         
@@ -77,7 +77,7 @@ def show_tool(gemini_api_key, speech_api_key):
         with col2:
             text_prompt = st.text_input("または、ここに日本語を入力してEnterキーを押してください...", key="translator_text")
 
-        # 結果表示と入力処理
+        # 結果表示エリア
         if st.session_state.translator_results:
             st.write("---")
             for i, result in enumerate(st.session_state.translator_results):
@@ -90,6 +90,7 @@ def show_tool(gemini_api_key, speech_api_key):
                 st.session_state.translator_last_text = ""
                 st.rerun()
 
+        # 入力検知
         japanese_text_to_process = None
         if audio_info and audio_info['id'] != st.session_state.translator_last_mic_id:
             with st.spinner("音声を日本語に変換中..."): text_from_mic = transcribe_audio(audio_info['bytes'], speech_api_key)
@@ -101,6 +102,7 @@ def show_tool(gemini_api_key, speech_api_key):
             japanese_text_to_process = text_prompt
             st.session_state.translator_last_text = text_prompt
 
+        # 翻訳処理
         if japanese_text_to_process:
             if not gemini_api_key: st.error("サイドバーでGemini APIキーを設定してください。")
             else:
