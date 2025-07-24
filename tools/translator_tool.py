@@ -2,10 +2,9 @@ import streamlit as st
 import google.generativeai as genai
 from google.cloud import speech
 from google.api_core.client_options import ClientOptions
-# import streamlit_mic_recorder # 追放済み
 import time
 
-# (補助関数は変更なし)
+# 補助関数 (Speech-to-Textは現在使用しないが、将来のために残す)
 def transcribe_audio(audio_bytes, api_key):
     if not audio_bytes or not api_key: return None
     try:
@@ -17,6 +16,7 @@ def transcribe_audio(audio_bytes, api_key):
         if response.results: return response.results[0].alternatives[0].transcript
     except Exception as e: st.error(f"音声認識エラー: {e}")
     return None
+
 def translate_text_with_gemini(text_to_translate, api_key):
     if not text_to_translate or not api_key: return None
     try:
@@ -29,11 +29,11 @@ def translate_text_with_gemini(text_to_translate, api_key):
     return None
 
 # ===============================================================
-# 専門家のメインの仕事 (『牢獄からの、解放』バージョン)
+# 専門家のメインの仕事 (最終安定バージョン)
 # ===============================================================
 def show_tool(gemini_api_key, speech_api_key):
 
-    # 『帰還者の祝福』の儀式 (変更なし)
+    # 『帰還者の祝福』の儀式
     if st.query_params.get("unlocked") == "true":
         st.session_state.translator_usage_count = 0
         st.query_params.clear()
@@ -44,16 +44,16 @@ def show_tool(gemini_api_key, speech_api_key):
 
     st.header("🤝 フレンドリー翻訳ツール", divider='rainbow')
 
-    # session_stateによる、純粋な、状態管理
+    # 状態管理は全てst.session_stateに統一
     if "translator_results" not in st.session_state: st.session_state.translator_results = []
     if "translator_last_text" not in st.session_state: st.session_state.translator_last_text = ""
     if "translator_usage_count" not in st.session_state: st.session_state.translator_usage_count = 0
 
     # 制限回数の設定
-    usage_limit = 2 # ← ★★★ 本番運用時は「10」に設定 ★★★
+    usage_limit = 10 # 本番運用時は「10」に設定
     is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
-    # 「制限時」と「通常時」の世界の、完全な分離
+    # 「制限時」と「通常時」の世界を分離する
     if is_limit_reached:
         st.success("🎉 たくさんのご利用、ありがとうございます！")
         st.info(
@@ -65,7 +65,7 @@ def show_tool(gemini_api_key, speech_api_key):
         st.link_button("応援ページに移動して、翻訳を続ける", portal_url, type="primary")
         
     else:
-        # --- 通常時の世界 ---
+        # --- 通常時の表示 ---
         st.info("テキストボックスに日本語を入力して、Enterキーを押してください。")
         st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、翻訳できます")
         
@@ -95,15 +95,23 @@ def show_tool(gemini_api_key, speech_api_key):
         if japanese_text_to_process:
             if not gemini_api_key: st.error("サイドバーでGemini APIキーを設定してください。")
             else:
-                # ★★★【最後の、そして、真の、答え】★★★
-                # スピナーという、牢獄を、完全に、破壊する！
-                # ユーザーは、僅かな、静寂の、時間を、待つことになるが、それは、クラッシュより、遥かに、良い。
-                translated_text = translate_text_with_gemini(japanese_text_to_process, gemini_api_key)
-                
-                if translated_text:
-                    st.session_state.translator_usage_count += 1
-                    st.session_state.translator_results.insert(0, {"original": japanese_text_to_process, "translated": translated_text})
-                    st.rerun()
-                else:
-                    st.session_state.translator_last_text = ""
-                    st.warning("翻訳に失敗しました。もう一度お試しください。")
+                # st.spinnerの代わりに、より安全なst.statusを使用
+                with st.status("AIが最適な英語を考えています...", expanded=True) as status:
+                    st.write("Gemini AIに接続中...")
+                    translated_text = translate_text_with_gemini(japanese_text_to_process, gemini_api_key)
+                    
+                    if translated_text:
+                        st.write("翻訳が完了しました！")
+                        status.update(label="翻訳完了！", state="complete", expanded=False)
+                        
+                        st.session_state.translator_usage_count += 1
+                        st.session_state.translator_results.insert(0, {"original": japanese_text_to_process, "translated": translated_text})
+                        
+                        # 状態更新が完了してから、安全にrerunを実行
+                        time.sleep(0.5) # 念のため、UIの更新を待つ
+                        st.rerun()
+                    else:
+                        st.write("AIとの通信に失敗しました。")
+                        status.update(label="エラー", state="error", expanded=True)
+                        st.session_state.translator_last_text = ""
+                        st.warning("翻訳に失敗しました。もう一度お試しください。")
