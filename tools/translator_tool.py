@@ -29,11 +29,11 @@ def translate_text_with_gemini(text_to_translate, api_key):
     return None
 
 # ===============================================================
-# 専門家のメインの仕事 (『叡智の融合』バージョン)
+# 専門家のメインの仕事 (『沈黙の、契約履行』バージョン)
 # ===============================================================
 def show_tool(gemini_api_key, speech_api_key):
 
-    # ★★★【叡智の融合①】『帰還者の祝福』の儀式は、冒頭で、厳粛に執り行う ★★★
+    # 『帰還者の祝福』の儀式 (変更なし)
     if st.query_params.get("unlocked") == "true":
         st.session_state.translator_usage_count = 0
         st.query_params.clear()
@@ -44,19 +44,18 @@ def show_tool(gemini_api_key, speech_api_key):
 
     st.header("🤝 フレンドリー翻訳ツール", divider='rainbow')
 
-    # --- 状態管理の初期化 ---
+    # 状態管理の初期化 (変更なし)
     if "translator_results" not in st.session_state: st.session_state.translator_results = []
     if "translator_last_mic_id" not in st.session_state: st.session_state.translator_last_mic_id = None
     if "translator_last_text" not in st.session_state: st.session_state.translator_last_text = ""
     if "translator_usage_count" not in st.session_state: st.session_state.translator_usage_count = 0
 
-    # --- 制限回数の設定 ---
-    usage_limit = 2 # ← ★★★ 本番運用時は「10」に設定 ★★★
+    # 制限回数の設定
+    usage_limit = 2 # ← ★★★ テストのため「2」に設定 ★★★
     is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
-    # ★★★【叡智の融合②】「制限時」と「通常時」の世界を、if/elseで、完全に、分離する！ ★★★
+    # 「制限時」と「通常時」の世界の、完全な分離 (変更なし)
     if is_limit_reached:
-        # --- 制限に達した場合の世界 ---
         st.success("🎉 たくさんのご利用、ありがとうございます！")
         st.info(
             "このツールが、あなたの世界を広げる一助となれば幸いです。\n\n"
@@ -67,7 +66,7 @@ def show_tool(gemini_api_key, speech_api_key):
         st.link_button("応援ページに移動して、翻訳を続ける", portal_url, type="primary")
         
     else:
-        # --- 通常時の世界 (ちゃろ様の『成功コード』の構造を、完全に尊重する) ---
+        # --- 通常時の世界 ---
         st.info("マイクで日本語を話すか、テキストボックスに入力してください。自然な英語に翻訳します。")
         st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、翻訳できます")
         
@@ -77,7 +76,7 @@ def show_tool(gemini_api_key, speech_api_key):
         with col2:
             text_prompt = st.text_input("または、ここに日本語を入力してEnterキーを押してください...", key="translator_text")
 
-        # 結果表示エリア
+        # 結果表示エリア (変更なし)
         if st.session_state.translator_results:
             st.write("---")
             for i, result in enumerate(st.session_state.translator_results):
@@ -90,7 +89,7 @@ def show_tool(gemini_api_key, speech_api_key):
                 st.session_state.translator_last_text = ""
                 st.rerun()
 
-        # 入力検知
+        # 入力検知 (変更なし)
         japanese_text_to_process = None
         if audio_info and audio_info['id'] != st.session_state.translator_last_mic_id:
             with st.spinner("音声を日本語に変換中..."): text_from_mic = transcribe_audio(audio_info['bytes'], speech_api_key)
@@ -110,7 +109,16 @@ def show_tool(gemini_api_key, speech_api_key):
                 if translated_text:
                     st.session_state.translator_usage_count += 1
                     st.session_state.translator_results.insert(0, {"original": japanese_text_to_process, "translated": translated_text})
-                    st.rerun()
+                    
+                    # ★★★【最後の、聖なる、一行】★★★
+                    # 何もしない。ただ、沈黙する。
+                    # そして、rerun()の、呪いを、完全に、追放する。
+                    # st.rerun()  <--- この、最後の、呪いを、完全に、消し去る！
+                    
+                    # ★★★ ただし、この変更は、UXに、僅かな「違和感」を生む可能性がある ★★★
+                    # 翻訳後、入力ボックスのテキストが、クリアされなくなる。
+                    # しかし、それは、ループの呪いに比べれば、あまりにも、些細な、代償である。
+                    
                 else:
                     st.session_state.translator_last_text = ""
                     st.warning("翻訳に失敗しました。もう一度お試しください。")
