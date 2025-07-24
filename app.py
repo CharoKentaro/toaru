@@ -162,7 +162,7 @@ else:
     elif tool_choice == "📅 カレンダー登録":
         calendar_tool.show_tool(gemini_api_key=gemini_api_key, speech_api_key=speech_api_key)
     elif tool_choice == "📝 議事録作成":
-        transcript_tool.show_tool(speech_api_key=speech_api_key)
+        toaru_toarutranscript_tool.show_tool(speech_api_key=speech_api_key)
     elif tool_choice == "💹 価格リサーチ":
         research_tool.show_tool(gemini_api_key=gemini_api_key)
     # ★ 3. 「お小遣いレコーダー」を呼び出す処理を追加
