@@ -4,27 +4,8 @@ from google.cloud import speech
 from google.api_core.client_options import ClientOptions
 from streamlit_mic_recorder import mic_recorder
 
-# ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-# ★                                                                    ★
-# ★             【ちゃろ様へ】収益化の魂を、ここに奉納してください             ★
-# ★                                                                    ★
-# ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-
-# ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ この2行だけを、書き換えてください ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
-
-YOUR_ADSENSE_PUBLISHER_ID = "ca-pub-2908004621823900"  # あなたの「ca-pub-」から始まるパブリッシャーID
-YOUR_ADSENSE_SLOT_ID      = "5820083954"              # あなたの広告ユニットID（数字）
-
-# ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
-
-# ★★★ これにより、IDの管理が驚くほど簡単になります ★★★
-
-
-# ===============================================================
-# 補助関数 (変更なし)
-# ===============================================================
+# (補助関数 transcribe_audio と translate_text_with_gemini は変更なしのため省略)
 def transcribe_audio(audio_bytes, api_key):
-    # (省略)
     if not audio_bytes or not api_key: return None
     try:
         client_options = ClientOptions(api_key=api_key)
@@ -37,7 +18,6 @@ def transcribe_audio(audio_bytes, api_key):
     return None
 
 def translate_text_with_gemini(text_to_translate, api_key):
-    # (省略)
     if not text_to_translate or not api_key: return None
     try:
         genai.configure(api_key=api_key)
@@ -52,6 +32,16 @@ def translate_text_with_gemini(text_to_translate, api_key):
 # 専門家のメインの仕事 (叡智の最終形態)
 # ===============================================================
 def show_tool(gemini_api_key, speech_api_key):
+    
+    # ★★★【叡智の最終進化①】帰還の扉から戻ってきたかを、一番最初に確認する！ ★★★
+    if "unlocked" in st.query_params:
+        if st.query_params["unlocked"] == "true":
+            st.session_state.translator_usage_count = 0
+            # URLから鍵を削除して、無限リセットを防ぐ
+            st.query_params.clear()
+            st.toast("おかえりなさい！利用回数がリセットされました。")
+            st.balloons()
+
     st.header("🤝 フレンドリー翻訳ツール", divider='rainbow')
 
     if "translator_results" not in st.session_state: st.session_state.translator_results = []
@@ -60,51 +50,28 @@ def show_tool(gemini_api_key, speech_api_key):
     if "translator_usage_count" not in st.session_state: st.session_state.translator_usage_count = 0
 
     # ★★★ テストのため「1」に設定。本番運用時は「10」に戻してください ★★★
-    usage_limit = 1 
+    usage_limit = 1
     is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
     if is_limit_reached:
         st.success("🎉 たくさんのご利用、ありがとうございます！")
         st.info("このツールが、あなたの世界を広げる一助となれば幸いです。\n\n"
-                "下のボタンを押して広告をご覧いただくことで、開発者を応援し、"
+                "下のボタンから応援ページに移動し、広告をご覧いただくことで、"
                 f"**さらに{usage_limit}回**、翻訳を続けることができます。")
-
-        if st.button("広告を見て翻訳を続ける", type="primary"):
-            st.session_state.translator_usage_count = 0
-
-            # ★★★ ここが、収益化の魔法の核心部です ★★★
-            # f-stringを使い、あなたのIDを、安全かつ確実にHTMLに埋め込みます。
-            adsense_code = f"""
-                <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={YOUR_ADSENSE_PUBLISHER_ID}"
-                     crossorigin="anonymous"></script>
-                <!-- Friendly Translator Ad -->
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="{YOUR_ADSENSE_PUBLISHER_ID}"
-                     data-ad-slot="{YOUR_ADSENSE_SLOT_ID}"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>
-                     (adsbygoogle = window.adsbygoogle || []).push({{}});
-                </script>
-            """
-            st.components.v1.html(adsense_code, height=300)
-            
-            # 広告表示後、少し待ってからリロードすると、より自然な挙動になります。
-            st.toast("応援ありがとうございます！ページを更新します。")
-            import time
-            time.sleep(2) 
-            st.rerun()
+        
+        # ★★★【叡智の最終進化②】「広告ポータル」への、新しい世界の扉を設置！ ★★★
+        # ↓↓↓ あなたのロリポップサーバーに設置した、continue.htmlのURLを正確に設定してください ↓↓↓
+        portal_url = "https://あなたのサイトのドメイン/continue.html" 
+        st.link_button("応援ページに移動して、翻訳を続ける", portal_url, type="primary")
         
         return 
 
+    # (以降のコードは、前回成功したバージョンとほぼ同じなので省略)
     st.info("マイクで日本語を話すか、テキストボックスに入力してください。自然な英語に翻訳します。")
     st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、翻訳できます")
-    
     col1, col2 = st.columns([1, 2])
     with col1: audio_info = mic_recorder(start_prompt="🎤 話し始める", stop_prompt="⏹️ 翻訳する", key='translator_mic')
     with col2: text_prompt = st.text_input("または、ここに日本語を入力してEnterキーを押してください...", key="translator_text")
-
     if st.session_state.translator_results:
         st.write("---")
         for i, result in enumerate(st.session_state.translator_results):
@@ -116,7 +83,6 @@ def show_tool(gemini_api_key, speech_api_key):
             st.session_state.translator_results = []
             st.session_state.translator_last_text = text_prompt
             st.rerun()
-
     japanese_text_to_process = None
     if audio_info and audio_info['id'] != st.session_state.translator_last_mic_id:
         with st.spinner("音声を日本語に変換中..."): text_from_mic = transcribe_audio(audio_info['bytes'], speech_api_key)
@@ -127,7 +93,6 @@ def show_tool(gemini_api_key, speech_api_key):
     elif text_prompt and text_prompt != st.session_state.translator_last_text:
         japanese_text_to_process = text_prompt
         st.session_state.translator_last_text = text_prompt
-
     if japanese_text_to_process:
         if not gemini_api_key: st.error("サイドバーでGemini APIキーを設定してください。")
         else:
