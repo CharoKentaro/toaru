@@ -1,0 +1,14 @@
+streamlit>=1.33.0
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
+gspread
+requests
+urllib3
+pandas
+pytz
+googlemaps
+streamlit-local-storage
+google-generativeai
+google-cloud-speech
+streamlit-mic-recorder
