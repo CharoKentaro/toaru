@@ -138,7 +138,7 @@ def show_tool(gemini_api_key, speech_api_key):
             
             if translated_text:
                 # 使用回数を増やす
-                st.session_state.translator_usage_count += 1
+                st.session_state.translator_usage_count += 2
                 
                 # 結果を追加
                 st.session_state.translator_results.insert(0, {
