@@ -58,7 +58,7 @@ def show_tool(gemini_api_key, speech_api_key):
         st.session_state.translator_usage_count = 0
 
     # ★★★【論理②】カウンターが10回以上か判定し、ユーザーと対話する ★★★
-    is_limit_reached = st.session_state.translator_usage_count >= 10
+    is_limit_reached = st.session_state.translator_usage_count >= 1
 
     if is_limit_reached:
         st.success("🎉 たくさんのご利用、ありがとうございます！")
