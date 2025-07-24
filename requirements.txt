@@ -2,3 +2,4 @@ streamlit
 google-generativeai
 google-cloud-speech
 streamlit-mic-recorder
+streamlit-local-storage  <--- ★★★ この、聖なる、一行を、追記する！ ★★★
