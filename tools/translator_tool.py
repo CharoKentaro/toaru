@@ -29,11 +29,11 @@ def translate_text_with_gemini(text_to_translate, api_key):
     return None
 
 # ===============================================================
-# 専門家のメインの仕事 (『叡智の融合』バージョン)
+# 専門家のメインの仕事 (『叡智の最終形態』バージョン)
 # ===============================================================
 def show_tool(gemini_api_key, speech_api_key):
 
-    # ★★★【叡智の融合①】『帰還者の祝福』の儀式は、冒頭で、厳粛に執り行う ★★★
+    # ★★★【叡智の融合①】『帰還者の祝福』の儀式 ★★★
     if st.query_params.get("unlocked") == "true":
         st.session_state.translator_usage_count = 0
         st.query_params.clear()
@@ -49,12 +49,13 @@ def show_tool(gemini_api_key, speech_api_key):
     if "translator_last_mic_id" not in st.session_state: st.session_state.translator_last_mic_id = None
     if "translator_last_text" not in st.session_state: st.session_state.translator_last_text = ""
     if "translator_usage_count" not in st.session_state: st.session_state.translator_usage_count = 0
+    # ★★★【修正案①】テキスト入力を処理するための、専用の状態を追加 ★★★
+    if "text_to_process" not in st.session_state: st.session_state.text_to_process = None
 
     # --- 制限回数の設定 ---
-    usage_limit = 2 # ← ★★★ 本番運用時は「10」に設定 ★★★
+    usage_limit = 2
     is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
-    # ★★★【叡智の融合②】「制限時」と「通常時」の世界を、if/elseで、完全に、分離する！ ★★★
     if is_limit_reached:
         # --- 制限に達した場合の世界 ---
         st.success("🎉 たくさんのご利用、ありがとうございます！")
@@ -63,21 +64,64 @@ def show_tool(gemini_api_key, speech_api_key):
             "下のボタンから応援ページに移動することで、"
             f"**さらに{usage_limit}回**、翻訳を続けることができます。"
         )
-        portal_url = "https://experiment-site.pray-power-is-god-and-cocoro.com/continue.html" 
+        portal_url = "https://experiment-site.pray-power-is-god-and-cocoro.com/continue.html"
         st.link_button("応援ページに移動して、翻訳を続ける", portal_url, type="primary")
-        
+
     else:
-        # --- 通常時の世界 (ちゃろ様の『成功コード』の構造を、完全に尊重する) ---
+        # --- 通常時の世界 ---
         st.info("マイクで日本語を話すか、テキストボックスに入力してください。自然な英語に翻訳します。")
         st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、翻訳できます")
-        
+
+        # ★★★【修正案②】テキスト入力が変更された時に呼ばれる、コールバック関数を定義 ★★★
+        def handle_text_input():
+            # 入力されたテキストを「処理対象」としてセッション状態に保存する
+            st.session_state.text_to_process = st.session_state.translator_text
+
         col1, col2 = st.columns([1, 2])
         with col1:
             audio_info = mic_recorder(start_prompt="🎤 話し始める", stop_prompt="⏹️ 翻訳する", key='translator_mic')
         with col2:
-            text_prompt = st.text_input("または、ここに日本語を入力してEnterキーを押してください...", key="translator_text")
+            # ★★★【修正案③】text_inputに on_change を設定 ★★★
+            st.text_input(
+                "または、ここに日本語を入力してEnterキーを押してください...",
+                key="translator_text",
+                on_change=handle_text_input
+            )
 
-        # 結果表示エリア
+        # ★★★【修正案④】検知と処理のロジックを、完全に再構築 ★★★
+        japanese_text_to_process = None
+
+        # --- 検知フェーズ ---
+        # まず音声入力をチェック
+        if audio_info and audio_info['id'] != st.session_state.translator_last_mic_id:
+            with st.spinner("音声を日本語に変換中..."):
+                text_from_mic = transcribe_audio(audio_info['bytes'], speech_api_key)
+            if text_from_mic:
+                japanese_text_to_process = text_from_mic
+                st.session_state.translator_last_mic_id = audio_info['id']
+        # 次に、コールバックによってセットされたテキスト入力をチェック
+        elif st.session_state.text_to_process:
+            japanese_text_to_process = st.session_state.text_to_process
+            # 処理対象を取得したら、すぐにNoneに戻し、重複実行を防ぐ
+            st.session_state.text_to_process = None
+
+        # --- 処理フェーズ ---
+        if japanese_text_to_process and japanese_text_to_process != st.session_state.translator_last_text:
+            st.session_state.translator_last_text = japanese_text_to_process
+
+            if not gemini_api_key:
+                st.error("サイドバーでGemini APIキーを設定してください。")
+            else:
+                with st.spinner("AIが最適な英語を考えています..."):
+                    translated_text = translate_text_with_gemini(japanese_text_to_process, gemini_api_key)
+                if translated_text:
+                    st.session_state.translator_usage_count += 1
+                    st.session_state.translator_results.insert(0, {"original": japanese_text_to_process, "translated": translated_text})
+                    st.rerun() # ★ 処理が成功し、結果を保存した直後に一度だけrerunし、画面を即座に更新する
+                else:
+                    st.warning("翻訳に失敗しました。もう一度お試しください。")
+
+        # --- 結果表示エリア ---
         if st.session_state.translator_results:
             st.write("---")
             for i, result in enumerate(st.session_state.translator_results):
@@ -89,28 +133,3 @@ def show_tool(gemini_api_key, speech_api_key):
                 st.session_state.translator_results = []
                 st.session_state.translator_last_text = ""
                 st.rerun()
-
-        # 入力検知
-        japanese_text_to_process = None
-        if audio_info and audio_info['id'] != st.session_state.translator_last_mic_id:
-            with st.spinner("音声を日本語に変換中..."): text_from_mic = transcribe_audio(audio_info['bytes'], speech_api_key)
-            if text_from_mic:
-                japanese_text_to_process = text_from_mic
-                st.session_state.translator_last_mic_id = audio_info['id']
-                st.session_state.translator_last_text = text_from_mic
-        elif text_prompt and text_prompt != st.session_state.translator_last_text:
-            japanese_text_to_process = text_prompt
-            st.session_state.translator_last_text = text_prompt
-
-              # 翻訳処理
-        if japanese_text_to_process:
-            if not gemini_api_key: st.error("サイドバーでGemini APIキーを設定してください。")
-            else:
-                with st.spinner("AIが最適な英語を考えています..."): translated_text = translate_text_with_gemini(japanese_text_to_process, gemini_api_key)
-                if translated_text:
-                    st.session_state.translator_usage_count += 1
-                    st.session_state.translator_results.insert(0, {"original": japanese_text_to_process, "translated": translated_text})
-                    # st.rerun() # ← ★★★【修正案】この行をコメントアウト、または削除します ★★★
-                else:
-                    st.session_state.translator_last_text = ""
-                    st.warning("翻訳に失敗しました。もう一度お試しください。")
