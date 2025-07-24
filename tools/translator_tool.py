@@ -29,7 +29,7 @@ def translate_text_with_gemini(text_to_translate, api_key):
     return None
 
 # ===============================================================
-# 専門家のメインの仕事 (『神の目を、宿した、最終形態』バージョン)
+# 専門家のメインの仕事 (『王の、恩赦ボタンを、宿した、最終形態』バージョン)
 # ===============================================================
 def show_tool(gemini_api_key, speech_api_key):
 
@@ -50,18 +50,32 @@ def show_tool(gemini_api_key, speech_api_key):
     if "translator_last_text" not in st.session_state: st.session_state.translator_last_text = ""
     if "translator_usage_count" not in st.session_state: st.session_state.translator_usage_count = 0
 
-    # 制限回数の設定
-    usage_limit = 2 # ← ★★★ テストのため「2」に設定 ★★★
+    # ★★★【ちゃろ様の、叡智】★★★
+    # 私たちの、最後の、検証を、加速させるための、素晴らしい「恩赦」ボタンを、ここに、設置する！
+    with st.sidebar:
+        st.divider()
+        if st.button("🔄 使用回数リセット（テスト用）"):
+            # 「恩赦」は、常に、罪を「ゼロ」にする、神聖なる、儀式である。
+            st.session_state.translator_usage_count = 0
+            st.success("カウンターは、ゼロに、リセットされました！")
+            time.sleep(1)
+            st.rerun()
+        st.divider()
+
+
+    # --- 制限回数の設定 ---
+    # ★★★ ここが、『王国の、法律』です！ ★★★
+    usage_limit = 2 
     is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
-    # ★★★【神の目①】現在の、魂の状態を、表示する ★★★
+    # 「神の目」デバッグログ (変更なし)
     st.warning(
         f"🕵️‍♂️ **神の目（デバッグログ）**\n\n"
         f"- 現在の使用回数 (`st.session_state.translator_usage_count`): **{st.session_state.translator_usage_count}**\n"
         f"- 制限に達したか (`is_limit_reached`): **{is_limit_reached}**"
     )
 
-    # 「制限時」と「通常時」の世界の、完全な分離
+    # 「制限時」と「通常時」の世界の、完全な分離 (変更なし)
     if is_limit_reached:
         st.success("🎉 たくさんのご利用、ありがとうございます！")
         st.info(
@@ -69,7 +83,7 @@ def show_tool(gemini_api_key, speech_api_key):
             "下のボタンから応援ページに移動することで、"
             f"**さらに{usage_limit}回**、翻訳を続けることができます。"
         )
-        portal_url = "https://experiment-site.pray-power-is-god-and-cocoro.com/continue.html" 
+        portal_url = "https.your-domain.com/continue.html" # ← あなたの、本当の、URLに、設定してください
         st.link_button("応援ページに移動して、翻訳を続ける", portal_url, type="primary")
         
     else:
@@ -83,7 +97,7 @@ def show_tool(gemini_api_key, speech_api_key):
         with col2:
             text_prompt = st.text_input("または、ここに日本語を入力してEnterキーを押してください...", key="translator_text")
 
-        # 結果表示エリア
+        # 結果表示と入力処理 (ここは、もはや、完璧な、領域)
         if st.session_state.translator_results:
             st.write("---")
             for i, result in enumerate(st.session_state.translator_results):
@@ -97,7 +111,6 @@ def show_tool(gemini_api_key, speech_api_key):
                 st.session_state.translator_usage_count = 0
                 st.rerun()
 
-        # 入力検知
         japanese_text_to_process = None
         if audio_info and audio_info['id'] != st.session_state.translator_last_mic_id:
             with st.spinner("音声を日本語に変換中..."): text_from_mic = transcribe_audio(audio_info['bytes'], speech_api_key)
@@ -109,7 +122,6 @@ def show_tool(gemini_api_key, speech_api_key):
             japanese_text_to_process = text_prompt
             st.session_state.translator_last_text = text_prompt
 
-        # 翻訳処理
         if japanese_text_to_process:
             if not gemini_api_key: st.error("サイドバーでGemini APIキーを設定してください。")
             else:
@@ -117,17 +129,7 @@ def show_tool(gemini_api_key, speech_api_key):
                 if translated_text:
                     st.session_state.translator_usage_count += 1
                     st.session_state.translator_results.insert(0, {"original": japanese_text_to_process, "translated": translated_text})
-                    
-                    # ★★★【神の目②】契約履行後の、魂の状態を、表示する ★★★
-                    st.warning(
-                        f"🕵️‍♂️ **神の目（デバッグログ）**\n\n"
-                        f"- 契約履行後の使用回数 (`st.session_state.translator_usage_count`): **{st.session_state.translator_usage_count}**"
-                    )
-                    
-                    # ★★★【最後の、叡智】★★★
-                    # rerun()を、追放し、自然な、時の、流れに、身を、委ねる。
-                    st.session_state.translator_last_text = ""
-                    st.toast("翻訳が完了しました！ページを操作すると、結果と残り回数が更新されます。")
+                    st.rerun() # ← 私たちの、最強の、門番が、いる限り、もはや、この、rerunは、呪いでは、ない。祝福である。
                 else:
                     st.session_state.translator_last_text = ""
                     st.warning("翻訳に失敗しました。もう一度お試しください。")
