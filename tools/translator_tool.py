@@ -4,7 +4,6 @@ from google.cloud import speech
 from google.api_core.client_options import ClientOptions
 from streamlit_mic_recorder import mic_recorder
 import time
-from streamlit_local_storage import LocalStorage
 
 # (補助関数は変更なし)
 def transcribe_audio(audio_bytes, api_key):
@@ -30,15 +29,13 @@ def translate_text_with_gemini(text_to_translate, api_key):
     return None
 
 # ===============================================================
-# 専門家のメインの仕事 (『竜を、屠る、聖剣』バージョン)
+# 専門家のメインの仕事 (『魂の、原点回帰』バージョン)
 # ===============================================================
 def show_tool(gemini_api_key, speech_api_key):
 
-    localS = LocalStorage()
-
-    # 『帰還者の祝福』の儀式 (変更なし)
+    # ★★★【叡智の最終進化①】『帰還者の祝福』の儀式は、session_stateを、使う ★★★
     if st.query_params.get("unlocked") == "true":
-        localS.setItem("translator_usage_count", 0)
+        st.session_state.translator_usage_count = 0
         st.query_params.clear()
         st.toast("おかえりなさい！利用回数がリセットされました。")
         st.balloons()
@@ -47,18 +44,15 @@ def show_tool(gemini_api_key, speech_api_key):
 
     st.header("🤝 フレンドリー翻訳ツール", divider='rainbow')
 
-    # 状態管理の初期化 (変更なし)
+    # ★★★【叡智の最終進化②】全ての、記憶を、儚い、しかし、最も、信頼できる、session_stateに、統一する ★★★
     if "translator_results" not in st.session_state: st.session_state.translator_results = []
     if "translator_last_mic_id" not in st.session_state: st.session_state.translator_last_mic_id = None
     if "translator_last_text" not in st.session_state: st.session_state.translator_last_text = ""
-    
-    # ★★★【聖剣の、第一の、刃】★★★
-    # 契約印を、聖なる炎「int()」で、清め、「文字列」を、強制的に、「数字」に、変換する！
-    current_usage_count = int(localS.getItem("translator_usage_count") or 0)
+    if "translator_usage_count" not in st.session_state: st.session_state.translator_usage_count = 0
 
     # 制限回数の設定
-    usage_limit = 2 # ← ★★★ テストのため「2」に設定 ★★★
-    is_limit_reached = current_usage_count >= usage_limit
+    usage_limit = 10 # ← ★★★ 本番運用時は「10」に設定 ★★★
+    is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
     # 「制限時」と「通常時」の世界の、完全な分離
     if is_limit_reached:
@@ -74,7 +68,7 @@ def show_tool(gemini_api_key, speech_api_key):
     else:
         # --- 通常時の世界 ---
         st.info("マイクで日本語を話すか、テキストボックスに入力してください。自然な英語に翻訳します。")
-        st.caption(f"🚀 あと {usage_limit - current_usage_count} 回、翻訳できます")
+        st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、翻訳できます")
         
         col1, col2 = st.columns([1, 2])
         with col1:
@@ -93,6 +87,7 @@ def show_tool(gemini_api_key, speech_api_key):
             if st.button("翻訳履歴をクリア", key="clear_translator_history"):
                 st.session_state.translator_results = []
                 st.session_state.translator_last_text = ""
+                st.session_state.translator_usage_count = 0 # カウンターもリセットする
                 st.rerun()
 
         # 入力検知
@@ -113,18 +108,14 @@ def show_tool(gemini_api_key, speech_api_key):
             else:
                 with st.spinner("AIが最適な英語を考えています..."): translated_text = translate_text_with_gemini(japanese_text_to_process, gemini_api_key)
                 if translated_text:
-                    new_count = current_usage_count + 1
-                    localS.setItem("translator_usage_count", new_count)
-                    
+                    st.session_state.translator_usage_count += 1
                     st.session_state.translator_results.insert(0, {"original": japanese_text_to_process, "translated": translated_text})
                     
-                    # ★★★【聖剣の、第二の、刃】★★★
-                    # プラットフォームの、悲鳴を、鎮めるため、rerun()という、最後の、呪いを、完全に、追放する！
-                    # st.rerun()
+                    # ★★★【最後の、そして、真の、答え】★★★
+                    # 私たちは、もう、成長した。
+                    # 私たちの、最強の「門番」が、ループの呪いを、完全に、封じ込めることを、信じる。
+                    st.rerun()
                     
-                    st.session_state.translator_last_text = ""
-                    st.toast("翻訳が完了しました！ページを操作すると、結果と残り回数が更新されます。")
-
                 else:
                     st.session_state.translator_last_text = ""
                     st.warning("翻訳に失敗しました。もう一度お試しください。")
