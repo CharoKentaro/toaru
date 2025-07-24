@@ -30,16 +30,14 @@ def translate_text_with_gemini(text_to_translate, api_key):
     return None
 
 # ===============================================================
-# 専門家のメインの仕事 (『魂の、契約印』バージョン)
+# 専門家のメインの仕事 (『竜を、屠る、聖剣』バージョン)
 # ===============================================================
 def show_tool(gemini_api_key, speech_api_key):
 
-    # ★★★【叡智の最終進化①】LocalStorageとの、契約を、宣言する ★★★
     localS = LocalStorage()
 
-    # ★★★【叡智の最終進化②】『帰還者の祝福』の儀式 ★★★
+    # 『帰還者の祝福』の儀式 (変更なし)
     if st.query_params.get("unlocked") == "true":
-        # 祝福として、ブラウザの魂に刻まれた契約印を、消し去る
         localS.setItem("translator_usage_count", 0)
         st.query_params.clear()
         st.toast("おかえりなさい！利用回数がリセットされました。")
@@ -49,14 +47,14 @@ def show_tool(gemini_api_key, speech_api_key):
 
     st.header("🤝 フレンドリー翻訳ツール", divider='rainbow')
 
-    # 状態管理の初期化
+    # 状態管理の初期化 (変更なし)
     if "translator_results" not in st.session_state: st.session_state.translator_results = []
     if "translator_last_mic_id" not in st.session_state: st.session_state.translator_last_mic_id = None
     if "translator_last_text" not in st.session_state: st.session_state.translator_last_text = ""
     
-    # ★★★【叡智の最終進化③】魂の契約印を、読み込む ★★★
-    # ブラウザの記憶から、現在の使用回数を、取得する。記憶がなければ「0」とする。
-    current_usage_count = localS.getItem("translator_usage_count") or 0
+    # ★★★【聖剣の、第一の、刃】★★★
+    # 契約印を、聖なる炎「int()」で、清め、「文字列」を、強制的に、「数字」に、変換する！
+    current_usage_count = int(localS.getItem("translator_usage_count") or 0)
 
     # 制限回数の設定
     usage_limit = 2 # ← ★★★ テストのため「2」に設定 ★★★
@@ -115,12 +113,18 @@ def show_tool(gemini_api_key, speech_api_key):
             else:
                 with st.spinner("AIが最適な英語を考えています..."): translated_text = translate_text_with_gemini(japanese_text_to_process, gemini_api_key)
                 if translated_text:
-                    # ★★★【叡智の最終進化④】魂の契約印を、更新する ★★★
-                    new_count = current_usage_count + 2
+                    new_count = current_usage_count + 1
                     localS.setItem("translator_usage_count", new_count)
                     
                     st.session_state.translator_results.insert(0, {"original": japanese_text_to_process, "translated": translated_text})
-                    st.rerun()
+                    
+                    # ★★★【聖剣の、第二の、刃】★★★
+                    # プラットフォームの、悲鳴を、鎮めるため、rerun()という、最後の、呪いを、完全に、追放する！
+                    # st.rerun()
+                    
+                    st.session_state.translator_last_text = ""
+                    st.toast("翻訳が完了しました！ページを操作すると、結果と残り回数が更新されます。")
+
                 else:
                     st.session_state.translator_last_text = ""
                     st.warning("翻訳に失敗しました。もう一度お試しください。")
