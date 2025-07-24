@@ -2,7 +2,6 @@ import streamlit as st
 import google.generativeai as genai
 from streamlit_mic_recorder import mic_recorder
 import time
-# import io # ← upload_fileへの依存を断ち切ったため、もはや不要
 
 # ===============================================================
 # 補助関数 (成功確率99%の『迂回戦略』バージョン)
@@ -23,15 +22,10 @@ def translate_with_gemini(content_to_process, api_key):
             
         elif isinstance(content_to_process, bytes):
             original_text = "(音声入力)"
-            
-            # ★★★ ここが、成功確率99%の、最終戦略の核心部です ★★★
-            # upload_file という不安定なヘルパー関数を完全に捨て去り、
-            # AIが直接理解できる、最も本質的で安定した「辞書形式」で音声データを渡す。
             audio_part = {
                 "mime_type": "audio/webm",
                 "data": content_to_process
             }
-            
             request_contents = [system_prompt, "この日本語の音声を翻訳してください:", audio_part]
         
         else:
@@ -45,7 +39,7 @@ def translate_with_gemini(content_to_process, api_key):
         return None, None
 
 # ===============================================================
-# 専門家のメインの仕事 (変更なし、私たちの叡智の集大成)
+# 専門家のメインの仕事 (私たちの叡智の集大成)
 # ===============================================================
 def show_tool(gemini_api_key):
     if st.query_params.get("unlocked") == "true":
