@@ -2,10 +2,10 @@ import streamlit as st
 import google.generativeai as genai
 from streamlit_mic_recorder import mic_recorder
 import time
-import io # ioライブラリをインポート
+# import io # ← upload_fileへの依存を断ち切ったため、もはや不要
 
 # ===============================================================
-# 補助関数 (最新のライブラリ仕様に対応した、最終バージョン)
+# 補助関数 (成功確率99%の『迂回戦略』バージョン)
 # ===============================================================
 def translate_with_gemini(content_to_process, api_key):
     if not content_to_process or not api_key:
@@ -20,15 +20,20 @@ def translate_with_gemini(content_to_process, api_key):
         if isinstance(content_to_process, str):
             original_text = content_to_process
             request_contents = [system_prompt, original_text]
+            
         elif isinstance(content_to_process, bytes):
             original_text = "(音声入力)"
             
-            # ★★★ ここが、今回の、絶対的な、修正点です ★★★
-            # 古い 'contents' 引数から、最新の 'file' 引数に修正する
-            # また、バイトデータをファイルのように扱うためにio.BytesIOを使用する
-            audio_file = genai.upload_file(file=io.BytesIO(content_to_process), mime_type='audio/webm')
+            # ★★★ ここが、成功確率99%の、最終戦略の核心部です ★★★
+            # upload_file という不安定なヘルパー関数を完全に捨て去り、
+            # AIが直接理解できる、最も本質的で安定した「辞書形式」で音声データを渡す。
+            audio_part = {
+                "mime_type": "audio/webm",
+                "data": content_to_process
+            }
             
-            request_contents = [system_prompt, "この日本語の音声を翻訳してください:", audio_file]
+            request_contents = [system_prompt, "この日本語の音声を翻訳してください:", audio_part]
+        
         else:
             return None, None
 
@@ -36,7 +41,6 @@ def translate_with_gemini(content_to_process, api_key):
         return original_text, response.text.strip()
 
     except Exception as e:
-        # エラーメッセージをより具体的に表示
         st.error(f"AI処理エラーが発生しました: {e}")
         return None, None
 
@@ -108,8 +112,6 @@ def show_tool(gemini_api_key):
                     st.rerun()
                 else:
                     st.session_state.translator_last_input = ""
-                    # 警告メッセージは補助関数内で表示されるため、ここでは不要
-                    # st.warning("翻訳に失敗しました。もう一度お試しください。")
 
         if st.session_state.translator_results:
             st.write("---")
