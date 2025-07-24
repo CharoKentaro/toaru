@@ -3,8 +3,9 @@ import google.generativeai as genai
 from google.cloud import speech
 from google.api_core.client_options import ClientOptions
 from streamlit_mic_recorder import mic_recorder
+import time
 
-# (補助関数 transcribe_audio と translate_text_with_gemini は変更なしのため省略)
+# (補助関数は変更なしのため、省略)
 def transcribe_audio(audio_bytes, api_key):
     if not audio_bytes or not api_key: return None
     try:
@@ -16,7 +17,6 @@ def transcribe_audio(audio_bytes, api_key):
         if response.results: return response.results[0].alternatives[0].transcript
     except Exception as e: st.error(f"音声認識エラー: {e}")
     return None
-
 def translate_text_with_gemini(text_to_translate, api_key):
     if not text_to_translate or not api_key: return None
     try:
@@ -29,18 +29,18 @@ def translate_text_with_gemini(text_to_translate, api_key):
     return None
 
 # ===============================================================
-# 専門家のメインの仕事 (叡智の最終形態)
+# 専門家のメインの仕事 (『帰還者の祝福』バージョン)
 # ===============================================================
 def show_tool(gemini_api_key, speech_api_key):
-    
-    # ★★★【叡智の最終進化①】帰還の扉から戻ってきたかを、一番最初に確認する！ ★★★
-    if "unlocked" in st.query_params:
-        if st.query_params["unlocked"] == "true":
-            st.session_state.translator_usage_count = 0
-            # URLから鍵を削除して、無限リセットを防ぐ
-            st.query_params.clear()
-            st.toast("おかえりなさい！利用回数がリセットされました。")
-            st.balloons()
+
+    # ★★★【叡智の最終進化①】『帰還者の祝福』- ページの最初に、ただ一度だけ実行される聖域 ★★★
+    if st.query_params.get("unlocked") == "true":
+        st.session_state.translator_usage_count = 0
+        st.query_params.clear() # ← 祝福を与えたら、証は即座に消し去る！これが呪いを防ぐ鍵！
+        st.toast("おかえりなさい！利用回数がリセットされました。")
+        st.balloons()
+        time.sleep(1)
+        st.rerun()
 
     st.header("🤝 フレンドリー翻訳ツール", divider='rainbow')
 
@@ -54,53 +54,61 @@ def show_tool(gemini_api_key, speech_api_key):
     is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
     if is_limit_reached:
+        # --- 制限に達した場合の表示 (旅立ちの扉) ---
         st.success("🎉 たくさんのご利用、ありがとうございます！")
-        st.info("このツールが、あなたの世界を広げる一助となれば幸いです。\n\n"
-                "下のボタンから応援ページに移動し、広告をご覧いただくことで、"
-                f"**さらに{usage_limit}回**、翻訳を続けることができます。")
+        st.info(
+            "このツールが、あなたの世界を広げる一助となれば幸いです。\n\n"
+            "下のボタンから応援ページに移動することで、"
+            f"**さらに{usage_limit}回**、翻訳を続けることができます。"
+        )
         
-        # ★★★【叡智の最終進化②】「広告ポータル」への、新しい世界の扉を設置！ ★★★
         # ↓↓↓ あなたのロリポップサーバーに設置した、continue.htmlのURLを正確に設定してください ↓↓↓
         portal_url = "https://あなたのサイトのドメイン/continue.html" 
         st.link_button("応援ページに移動して、翻訳を続ける", portal_url, type="primary")
         
-        return 
+    else:
+        # --- 通常時の表示 ---
+        st.info("マイクで日本語を話すか、テキストボックスに入力してください。自然な英語に翻訳します。")
+        st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、翻訳できます")
+        
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            audio_info = mic_recorder(start_prompt="🎤 話し始める", stop_prompt="⏹️ 翻訳する", key='translator_mic')
+        with col2:
+            text_prompt = st.text_input("または、ここに日本語を入力してEnterキーを押してください...", key="translator_text")
 
-    # (以降のコードは、前回成功したバージョンとほぼ同じなので省略)
-    st.info("マイクで日本語を話すか、テキストボックスに入力してください。自然な英語に翻訳します。")
-    st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、翻訳できます")
-    col1, col2 = st.columns([1, 2])
-    with col1: audio_info = mic_recorder(start_prompt="🎤 話し始める", stop_prompt="⏹️ 翻訳する", key='translator_mic')
-    with col2: text_prompt = st.text_input("または、ここに日本語を入力してEnterキーを押してください...", key="translator_text")
-    if st.session_state.translator_results:
-        st.write("---")
-        for i, result in enumerate(st.session_state.translator_results):
-            with st.container(border=True):
-                st.caption(f"翻訳履歴 No.{len(st.session_state.translator_results) - i}")
-                st.markdown(f"**🇯🇵 あなたの入力:**\n> {result['original']}")
-                st.markdown(f"**🇺🇸 AIの翻訳:**\n> {result['translated']}")
-        if st.button("翻訳履歴をクリア", key="clear_translator_history"):
-            st.session_state.translator_results = []
-            st.session_state.translator_last_text = text_prompt
-            st.rerun()
-    japanese_text_to_process = None
-    if audio_info and audio_info['id'] != st.session_state.translator_last_mic_id:
-        with st.spinner("音声を日本語に変換中..."): text_from_mic = transcribe_audio(audio_info['bytes'], speech_api_key)
-        if text_from_mic:
-            japanese_text_to_process = text_from_mic
-            st.session_state.translator_last_mic_id = audio_info['id']
-            st.session_state.translator_last_text = text_from_mic
-    elif text_prompt and text_prompt != st.session_state.translator_last_text:
-        japanese_text_to_process = text_prompt
-        st.session_state.translator_last_text = text_prompt
-    if japanese_text_to_process:
-        if not gemini_api_key: st.error("サイドバーでGemini APIキーを設定してください。")
-        else:
-            with st.spinner("AIが最適な英語を考えています..."): translated_text = translate_text_with_gemini(japanese_text_to_process, gemini_api_key)
-            if translated_text:
-                st.session_state.translator_usage_count += 1
-                st.session_state.translator_results.insert(0, {"original": japanese_text_to_process, "translated": translated_text})
-                st.rerun()
-            else:
+        # 結果表示と入力処理
+        if st.session_state.translator_results:
+            st.write("---")
+            for i, result in enumerate(st.session_state.translator_results):
+                with st.container(border=True):
+                    st.caption(f"翻訳履歴 No.{len(st.session_state.translator_results) - i}")
+                    st.markdown(f"**🇯🇵 あなたの入力:**\n> {result['original']}")
+                    st.markdown(f"**🇺🇸 AIの翻訳:**\n> {result['translated']}")
+            if st.button("翻訳履歴をクリア", key="clear_translator_history"):
+                st.session_state.translator_results = []
                 st.session_state.translator_last_text = ""
-                st.warning("翻訳に失敗しました。もう一度お試しください。")
+                st.rerun()
+
+        japanese_text_to_process = None
+        if audio_info and audio_info['id'] != st.session_state.translator_last_mic_id:
+            with st.spinner("音声を日本語に変換中..."): text_from_mic = transcribe_audio(audio_info['bytes'], speech_api_key)
+            if text_from_mic:
+                japanese_text_to_process = text_from_mic
+                st.session_state.translator_last_mic_id = audio_info['id']
+                st.session_state.translator_last_text = text_from_mic
+        elif text_prompt and text_prompt != st.session_state.translator_last_text:
+            japanese_text_to_process = text_prompt
+            st.session_state.translator_last_text = text_prompt
+
+        if japanese_text_to_process:
+            if not gemini_api_key: st.error("サイドバーでGemini APIキーを設定してください。")
+            else:
+                with st.spinner("AIが最適な英語を考えています..."): translated_text = translate_text_with_gemini(japanese_text_to_process, gemini_api_key)
+                if translated_text:
+                    st.session_state.translator_usage_count += 1
+                    st.session_state.translator_results.insert(0, {"original": japanese_text_to_process, "translated": translated_text})
+                    st.rerun()
+                else:
+                    st.session_state.translator_last_text = ""
+                    st.warning("翻訳に失敗しました。もう一度お試しください。")
