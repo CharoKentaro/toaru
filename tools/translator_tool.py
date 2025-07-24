@@ -2,11 +2,12 @@ import streamlit as st
 import google.generativeai as genai
 from google.cloud import speech
 from google.api_core.client_options import ClientOptions
-from streamlit_mic_recorder import mic_recorder
+# import streamlit_mic_recorder # ← ★★★ 全ての、呪いの、根源を、完全に、追放する ★★★
 import time
 
 # (補助関数は変更なし)
 def transcribe_audio(audio_bytes, api_key):
+    # (この関数は、もはや、呼ばれることはないが、未来の、叡智として、残しておく)
     if not audio_bytes or not api_key: return None
     try:
         client_options = ClientOptions(api_key=api_key)
@@ -21,7 +22,7 @@ def translate_text_with_gemini(text_to_translate, api_key):
     if not text_to_translate or not api_key: return None
     try:
         genai.configure(api_key=api_key)
-        system_prompt = "あなたは、言語の壁を乗り越える手助けをする、非常に優秀な翻訳アシスタントです。ユーザーから渡された日本語のテキストを、海外の親しい友人との会話で使われるような、自然で、カジュアルでありながら礼儀正しく、そしてフレンドリーな英語に翻訳してください。- 非常に硬い表現や、ビジネス文書のような翻訳は避けてください。- 翻訳後の英語テキストのみを回答してください。他の言葉は一切含めないでください。"
+        system_prompt = "あなたは、言語の壁を乗り越える手助けをする、非常に優秀な翻訳アシ-スタントです。ユーザーから渡された日本語のテキストを、海外の親しい友人との会話で使われるような、自然で、カジュアルでありながら礼儀正しく、そしてフレンドリーな英語に翻訳してください。- 非常に硬い表現や、ビジネス文書のような翻訳は避けてください。- 翻訳後の英語テキストのみを回答してください。他の言葉は一切含めないでください。"
         model = genai.GenerativeModel('gemini-1.5-flash-latest', system_instruction=system_prompt)
         response = model.generate_content(text_to_translate)
         return response.text.strip()
@@ -29,7 +30,7 @@ def translate_text_with_gemini(text_to_translate, api_key):
     return None
 
 # ===============================================================
-# 専門家のメインの仕事 (『聖なる、契約の、再確認』バージョン)
+# 専門家のメインの仕事 (『魂の、原点回帰』バージョン)
 # ===============================================================
 def show_tool(gemini_api_key, speech_api_key):
 
@@ -44,17 +45,16 @@ def show_tool(gemini_api_key, speech_api_key):
 
     st.header("🤝 フレンドリー翻訳ツール", divider='rainbow')
 
-    # 状態管理の初期化 (変更なし)
+    # session_stateによる、純粋な、状態管理
     if "translator_results" not in st.session_state: st.session_state.translator_results = []
-    if "translator_last_mic_id" not in st.session_state: st.session_state.translator_last_mic_id = None
     if "translator_last_text" not in st.session_state: st.session_state.translator_last_text = ""
     if "translator_usage_count" not in st.session_state: st.session_state.translator_usage_count = 0
 
     # 制限回数の設定
-    usage_limit = 2 # ← ★★★ テストのため「2」に設定。本番運用時は「10」にしてください。 ★★★
+    usage_limit = 10 # ← ★★★ 本番運用時は「10」に設定 ★★★
     is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
-    # 「制限時」と「通常時」の世界の、完全な分離 (変更なし)
+    # 「制限時」と「通常時」の世界の、完全な分離
     if is_limit_reached:
         st.success("🎉 たくさんのご利用、ありがとうございます！")
         st.info(
@@ -67,16 +67,13 @@ def show_tool(gemini_api_key, speech_api_key):
         
     else:
         # --- 通常時の世界 ---
-        st.info("マイクで日本語を話すか、テキストボックスに入力してください。自然な英語に翻訳します。")
+        st.info("テキストボックスに日本語を入力して、Enterキーを押してください。") # ← マイクの案内を、削除
         st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、翻訳できます")
         
-        col1, col2 = st.columns([1, 2])
-        with col1:
-            audio_info = mic_recorder(start_prompt="🎤 話し始める", stop_prompt="⏹️ 翻訳する", key='translator_mic')
-        with col2:
-            text_prompt = st.text_input("または、ここに日本語を入力してEnterキーを押してください...", key="translator_text")
+        # ★★★ 呪われた、専門家を、追放し、最も、シンプルで、安定した、テキスト入力に、回帰する ★★★
+        text_prompt = st.text_input("ここに日本語を入力してください...", key="translator_text")
 
-        # 結果表示エリア (変更なし)
+        # 結果表示エリア
         if st.session_state.translator_results:
             st.write("---")
             for i, result in enumerate(st.session_state.translator_results):
@@ -87,17 +84,12 @@ def show_tool(gemini_api_key, speech_api_key):
             if st.button("翻訳履歴をクリア", key="clear_translator_history"):
                 st.session_state.translator_results = []
                 st.session_state.translator_last_text = ""
+                st.session_state.translator_usage_count = 0 
                 st.rerun()
 
-        # 入力検知 (変更なし)
+        # 入力検知
         japanese_text_to_process = None
-        if audio_info and audio_info['id'] != st.session_state.translator_last_mic_id:
-            with st.spinner("音声を日本語に変換中..."): text_from_mic = transcribe_audio(audio_info['bytes'], speech_api_key)
-            if text_from_mic:
-                japanese_text_to_process = text_from_mic
-                st.session_state.translator_last_mic_id = audio_info['id']
-                st.session_state.translator_last_text = text_from_mic
-        elif text_prompt and text_prompt != st.session_state.translator_last_text:
+        if text_prompt and text_prompt != st.session_state.translator_last_text:
             japanese_text_to_process = text_prompt
             st.session_state.translator_last_text = text_prompt
 
@@ -109,11 +101,7 @@ def show_tool(gemini_api_key, speech_api_key):
                 if translated_text:
                     st.session_state.translator_usage_count += 1
                     st.session_state.translator_results.insert(0, {"original": japanese_text_to_process, "translated": translated_text})
-                    
-                    # ★★★【最後の、聖なる、一行】★★★
-                    # rerun()の前に、セッション状態を、物理的に、再読み込みさせ、記憶を、強制的に、確定させる！
-                    st.experimental_rerun()
-                    
+                    st.rerun()
                 else:
                     st.session_state.translator_last_text = ""
                     st.warning("翻訳に失敗しました。もう一度お試しください。")
