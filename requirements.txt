@@ -1,4 +1,3 @@
 streamlit
 google-generativeai
-google-cloud-speech
 streamlit-mic-recorder
