@@ -29,7 +29,7 @@ def translate_text_with_gemini(text_to_translate, api_key):
     return None
 
 # ===============================================================
-# 専門家のメインの仕事 (『沈黙の、契約履行』バージョン)
+# 専門家のメインの仕事 (『制御された、時の、祝福』バージョン)
 # ===============================================================
 def show_tool(gemini_api_key, speech_api_key):
 
@@ -51,7 +51,7 @@ def show_tool(gemini_api_key, speech_api_key):
     if "translator_usage_count" not in st.session_state: st.session_state.translator_usage_count = 0
 
     # 制限回数の設定
-    usage_limit = 2 # ← ★★★ テストのため「2」に設定 ★★★
+    usage_limit = 2 # ← ★★★ テストのため「2」に設定。本番運用時は「10」にしてください。 ★★★
     is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
     # 「制限時」と「通常時」の世界の、完全な分離 (変更なし)
@@ -107,17 +107,13 @@ def show_tool(gemini_api_key, speech_api_key):
             else:
                 with st.spinner("AIが最適な英語を考えています..."): translated_text = translate_text_with_gemini(japanese_text_to_process, gemini_api_key)
                 if translated_text:
-                    st.session_state.translator_usage_count += 1
+                    st.session_state.translator_usage_count += 2
                     st.session_state.translator_results.insert(0, {"original": japanese_text_to_process, "translated": translated_text})
                     
-                    # ★★★【最後の、聖なる、一行】★★★
-                    # 何もしない。ただ、沈黙する。
-                    # そして、rerun()の、呪いを、完全に、追放する。
-                    # st.rerun()  <--- この、最後の、呪いを、完全に、消し去る！
-                    
-                    # ★★★ ただし、この変更は、UXに、僅かな「違和感」を生む可能性がある ★★★
-                    # 翻訳後、入力ボックスのテキストが、クリアされなくなる。
-                    # しかし、それは、ループの呪いに比べれば、あまりにも、些細な、代償である。
+                    # ★★★【最後の、そして、真の、答え】★★★
+                    # 時の、流れを、取り戻す！
+                    # そして、我らが「最強の門番」が、ループの呪いを、完全に、封じ込める！
+                    st.rerun()
                     
                 else:
                     st.session_state.translator_last_text = ""
