@@ -70,7 +70,7 @@ def show_tool(gemini_api_key): # ← speech_api_key は、もはや不要
     if "translator_usage_count" not in st.session_state: st.session_state.translator_usage_count = 0
 
     # --- 制限回数の設定 (本番運用時は「10」などに設定) ---
-    usage_limit = 10
+    usage_limit = 2
     is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
     # ★★★【叡智の融合②】「制限時」と「通常時」の世界の分離 (変更なし) ★★★
