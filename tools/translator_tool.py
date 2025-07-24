@@ -4,7 +4,7 @@ from streamlit_mic_recorder import mic_recorder
 import time
 
 # ===============================================================
-# 補助関数 (成功確率99%の『迂回戦略』バージョン)
+# 補助関数 (フォーマルな魂を宿した、新バージョン)
 # ===============================================================
 def translate_with_gemini(content_to_process, api_key):
     if not content_to_process or not api_key:
@@ -14,10 +14,13 @@ def translate_with_gemini(content_to_process, api_key):
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
-        system_prompt = "あなたは、言語の壁を乗り越える手助けをする、極めて優秀で、信頼性の高い、プロフェッショナルな翻訳アシスタントです。
-ユーザーから渡された日本語のテキストを、ビジネスメールや公式な文書で使用できるような、フォーマルで、丁寧で、正確、そしてプロフェッショナルな英語に翻訳してください。
-- 過度にカジュアルな表現や、スラングは絶対に避けてください。
-- 翻訳後の英語テキストのみを、他の言葉を一切含めずに、回答してください。"
+        # ★★★ ここが、ユーザーの真のニーズに応える、新たな魂です ★★★
+        system_prompt = """
+        あなたは、言語の壁を乗り越える手助けをする、極めて優秀で、信頼性の高い、プロフェッショナルな翻訳アシスタントです。
+        ユーザーから渡された日本語のテキストを、ビジネスメールや公式な文書で使用できるような、フォーマルで、丁寧で、正確、そしてプロフェッショナルな英語に翻訳してください。
+        - 過度にカジュアルな表現や、スラングは絶対に避けてください。
+        - 翻訳後の英語テキストのみを、他の言葉を一切含めずに、回答してください。
+        """
 
         if isinstance(content_to_process, str):
             original_text = content_to_process
@@ -42,7 +45,7 @@ def translate_with_gemini(content_to_process, api_key):
         return None, None
 
 # ===============================================================
-# 専門家のメインの仕事 (私たちの叡智の集大成)
+# 専門家のメインの仕事 (変更なし、私たちの叡智の集大成)
 # ===============================================================
 def show_tool(gemini_api_key):
     if st.query_params.get("unlocked") == "true":
@@ -61,7 +64,7 @@ def show_tool(gemini_api_key):
     if "translator_last_input" not in st.session_state: st.session_state.translator_last_input = ""
     if "translator_usage_count" not in st.session_state: st.session_state.translator_usage_count = 0
 
-    usage_limit = 2
+    usage_limit = 10
     is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
     if is_limit_reached:
@@ -70,7 +73,7 @@ def show_tool(gemini_api_key):
         portal_url = "https://experiment-site.pray-power-is-god-and-cocoro.com/continue.html"
         st.link_button("応援ページに移動して、翻訳を続ける", portal_url, type="primary")
     else:
-        st.info("マイクで日本語を話すか、テキストボックスに入力してください。自然な英語に翻訳します。")
+        st.info("マイクで日本語を話すか、テキストボックスに入力してください。プロフェッショナルな英語に翻訳します。") # ← ここの文言も少し変更
         st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、翻訳できます")
         with st.expander("💡 このツールのAIについて"):
             st.markdown("""
@@ -101,7 +104,7 @@ def show_tool(gemini_api_key):
             if not gemini_api_key:
                 st.error("サイドバーでGemini APIキーを設定してください。")
             else:
-                with st.spinner("AIが音声を認識し、最適な英語を考えています..."):
+                with st.spinner("AIが最適な英語を考えています..."):
                     original, translated = translate_with_gemini(content_to_process, gemini_api_key)
                 if translated:
                     st.session_state.translator_usage_count += 1
