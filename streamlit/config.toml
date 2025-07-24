@@ -1,0 +1,48 @@
+[global]
+# 開発モード設定
+developmentMode = false
+
+# データフレーム設定
+dataFrameSerialization = "legacy"
+
+[server]
+# サーバー設定
+port = 8501
+enableCORS = false
+enableXsrfProtection = true
+maxUploadSize = 200
+enableWebsocketCompression = false
+
+# ヘッダー設定
+enableStaticServing = true
+
+[browser]
+# ブラウザ設定
+serverAddress = "localhost"
+gatherUsageStats = false
+showErrorDetails = true
+
+[theme]
+# テーマ設定
+primaryColor = "#4A90E2"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+font = "sans serif"
+
+[client]
+# クライアント設定
+caching = true
+displayEnabled = true
+showErrorDetails = true
+
+[runner]
+# ランナー設定
+magicEnabled = true
+installTracer = false
+fixMatplotlib = true
+
+[logger]
+# ログ設定
+level = "info"
+messageFormat = "%(asctime)s.%(msecs)03d %(name)s %(levelname)s %(message)s"
