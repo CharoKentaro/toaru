@@ -4,6 +4,7 @@ from google.cloud import speech
 from google.api_core.client_options import ClientOptions
 from streamlit_mic_recorder import mic_recorder
 import time
+from streamlit_local_storage import LocalStorage
 
 # (補助関数は変更なし)
 def transcribe_audio(audio_bytes, api_key):
@@ -29,13 +30,17 @@ def translate_text_with_gemini(text_to_translate, api_key):
     return None
 
 # ===============================================================
-# 専門家のメインの仕事 (『制御された、時の、祝福』バージョン)
+# 専門家のメインの仕事 (『魂の、契約印』バージョン)
 # ===============================================================
 def show_tool(gemini_api_key, speech_api_key):
 
-    # 『帰還者の祝福』の儀式 (変更なし)
+    # ★★★【叡智の最終進化①】LocalStorageとの、契約を、宣言する ★★★
+    localS = LocalStorage()
+
+    # ★★★【叡智の最終進化②】『帰還者の祝福』の儀式 ★★★
     if st.query_params.get("unlocked") == "true":
-        st.session_state.translator_usage_count = 0
+        # 祝福として、ブラウザの魂に刻まれた契約印を、消し去る
+        localS.setItem("translator_usage_count", 0)
         st.query_params.clear()
         st.toast("おかえりなさい！利用回数がリセットされました。")
         st.balloons()
@@ -44,17 +49,20 @@ def show_tool(gemini_api_key, speech_api_key):
 
     st.header("🤝 フレンドリー翻訳ツール", divider='rainbow')
 
-    # 状態管理の初期化 (変更なし)
+    # 状態管理の初期化
     if "translator_results" not in st.session_state: st.session_state.translator_results = []
     if "translator_last_mic_id" not in st.session_state: st.session_state.translator_last_mic_id = None
     if "translator_last_text" not in st.session_state: st.session_state.translator_last_text = ""
-    if "translator_usage_count" not in st.session_state: st.session_state.translator_usage_count = 0
+    
+    # ★★★【叡智の最終進化③】魂の契約印を、読み込む ★★★
+    # ブラウザの記憶から、現在の使用回数を、取得する。記憶がなければ「0」とする。
+    current_usage_count = localS.getItem("translator_usage_count") or 0
 
     # 制限回数の設定
-    usage_limit = 2 # ← ★★★ テストのため「2」に設定。本番運用時は「10」にしてください。 ★★★
-    is_limit_reached = st.session_state.translator_usage_count >= usage_limit
+    usage_limit = 2 # ← ★★★ テストのため「2」に設定 ★★★
+    is_limit_reached = current_usage_count >= usage_limit
 
-    # 「制限時」と「通常時」の世界の、完全な分離 (変更なし)
+    # 「制限時」と「通常時」の世界の、完全な分離
     if is_limit_reached:
         st.success("🎉 たくさんのご利用、ありがとうございます！")
         st.info(
@@ -68,7 +76,7 @@ def show_tool(gemini_api_key, speech_api_key):
     else:
         # --- 通常時の世界 ---
         st.info("マイクで日本語を話すか、テキストボックスに入力してください。自然な英語に翻訳します。")
-        st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、翻訳できます")
+        st.caption(f"🚀 あと {usage_limit - current_usage_count} 回、翻訳できます")
         
         col1, col2 = st.columns([1, 2])
         with col1:
@@ -76,7 +84,7 @@ def show_tool(gemini_api_key, speech_api_key):
         with col2:
             text_prompt = st.text_input("または、ここに日本語を入力してEnterキーを押してください...", key="translator_text")
 
-        # 結果表示エリア (変更なし)
+        # 結果表示エリア
         if st.session_state.translator_results:
             st.write("---")
             for i, result in enumerate(st.session_state.translator_results):
@@ -89,7 +97,7 @@ def show_tool(gemini_api_key, speech_api_key):
                 st.session_state.translator_last_text = ""
                 st.rerun()
 
-        # 入力検知 (変更なし)
+        # 入力検知
         japanese_text_to_process = None
         if audio_info and audio_info['id'] != st.session_state.translator_last_mic_id:
             with st.spinner("音声を日本語に変換中..."): text_from_mic = transcribe_audio(audio_info['bytes'], speech_api_key)
@@ -107,14 +115,12 @@ def show_tool(gemini_api_key, speech_api_key):
             else:
                 with st.spinner("AIが最適な英語を考えています..."): translated_text = translate_text_with_gemini(japanese_text_to_process, gemini_api_key)
                 if translated_text:
-                    st.session_state.translator_usage_count += 2
+                    # ★★★【叡智の最終進化④】魂の契約印を、更新する ★★★
+                    new_count = current_usage_count + 2
+                    localS.setItem("translator_usage_count", new_count)
+                    
                     st.session_state.translator_results.insert(0, {"original": japanese_text_to_process, "translated": translated_text})
-                    
-                    # ★★★【最後の、そして、真の、答え】★★★
-                    # 時の、流れを、取り戻す！
-                    # そして、我らが「最強の門番」が、ループの呪いを、完全に、封じ込める！
                     st.rerun()
-                    
                 else:
                     st.session_state.translator_last_text = ""
                     st.warning("翻訳に失敗しました。もう一度お試しください。")
