@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_local_storage import LocalStorage
 import time
 # ★★★ 五人の、英雄たちが、ここに、集結します ★★★
-from tools import translator_tool, okozukai_recorder_tool, calendar_tool, norikae_tool, gijiroku_tool
+from tools import translator_tool, okozukai_recorder_tool, calendar_tool, gijiroku_tool
 
 # --- アプリの基本設定 (変更なし) ---
 st.set_page_config(page_title="Multi-Tool Portal", page_icon="🚀", layout="wide")
@@ -15,7 +15,7 @@ with st.sidebar:
     # ★★★ 選択肢は、五つに ★★★
     tool_selection = st.radio(
         "利用するツールを選択してください:",
-        ("🤝 翻訳ツール", "💰 お小遣い管理", "📅 カレンダーAI秘書", "🚃 乗り換え案内", "📝 議事録作成"),
+        ("🤝 翻訳ツール", "💰 お小遣い管理", "📅 カレンダーAI秘書", "📝 議事録作成"),
         key="tool_selection"
     )
     st.divider()
@@ -49,7 +49,5 @@ elif st.session_state.tool_selection == "💰 お小遣い管理":
     okozukai_recorder_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
 elif st.session_state.tool_selection == "📅 カレンダーAI秘書":
     calendar_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
-elif st.session_state.tool_selection == "🚃 乗り換え案内":
-    norikae_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
 elif st.session_state.tool_selection == "📝 議事録作成":
     gijiroku_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
