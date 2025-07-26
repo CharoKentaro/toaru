@@ -118,6 +118,8 @@ def show_tool(gemini_api_key):
     usage_limit = 1
     is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
+    audio_info = None
+
     if is_limit_reached:
         st.success("🎉 たくさんのご利用、ありがとうございます！")
         st.info("このツールが、あなたの世界を広げる一助となれば幸いです。\n\n下のボタンから応援ページに移動することで、翻訳を続けることができます。")
