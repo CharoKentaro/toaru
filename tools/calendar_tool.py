@@ -33,7 +33,7 @@ def create_google_calendar_url(details):
 # 専門家のメインの仕事（応援システムを戴冠）
 # ===============================================================
 def show_tool(gemini_api_key):
-    st.header("📅 あなただけのAI秘書", divider='rainbow')
+    st.header("📅 カレンダー登録AI秘書", divider='rainbow')
 
     # --- 【帰還者の祝福】 ---
     if st.query_params.get("unlocked") == "true":
