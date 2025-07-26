@@ -53,11 +53,14 @@ def translate_with_gemini(content_to_process, api_key):
                 },
                 {
                   "translation": "ここに、3つ目の、さらに、異なる、視点からの、翻訳候補を記述します。",
-                  "nuance": "は、必ず、日本語で示してください。この翻訳が持つ、ニュアンス（例：「最も簡潔」「直接的」など）を、簡潔に、**【日本語】で説明します。**"
+                  "nuance": "この翻訳が持つ、ニュアンス（例：「最も簡潔」「直接的」など）を、簡潔に、説明します。"
                 }
               ]
             }
             ```
+            ## 最重要ルール:
+            - `translation` は、必ず、プロフェッショナルな英語で、記述すること。
+            - `nuance` は、必ず、その、違いが、一目でわかる、**簡潔な【日本語】**で、記述すること。
             """
             request_contents = [system_prompt, processed_text]
             response = model.generate_content(request_contents)
