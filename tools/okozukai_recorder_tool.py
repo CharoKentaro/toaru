@@ -41,7 +41,7 @@ def format_balance_display(balance):
 
 # --- ポータルから呼び出されるメイン関数 ---
 def show_tool(gemini_api_key):
-    st.header("💰 お小遣いレコーダー", divider='rainbow')
+    st.header("💰 お小遣い管理", divider='rainbow')
 
     try:
         localS = LocalStorage()
