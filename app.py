@@ -15,7 +15,7 @@ with st.sidebar:
     # ★★★ 選択肢は、四つに ★★★
     tool_selection = st.radio(
         "利用するツールを選択してください:",
-        ("🤝 翻訳ツール", "💰 お小遣い管理", "📅 カレンダーAI秘書", "🚃 乗り換え案内"),
+        ("🤝 翻訳ツール", "💰 お小遣い管理", "📅 カレンダーAI秘書"),
         key="tool_selection"
     )
     st.divider()
