@@ -26,7 +26,7 @@ def show_tool(gemini_api_key):
         st.session_state.norikae_usage_count = 0
 
     # --- ★★★【運命の分岐路】★★★ ---
-    usage_limit = 5 # ご指定の通り、5回に設定
+    usage_limit = 2 # ご指定の通り、5回に設定
     is_limit_reached = st.session_state.get("norikae_usage_count", 0) >= usage_limit
 
     if is_limit_reached:
@@ -39,7 +39,7 @@ def show_tool(gemini_api_key):
         # --- 通常モード (上限に達していない場合) ---
         st.info("出発地と目的地を入力すると、AIが標準的な所要時間や料金に基づいた最適なルートを3つ提案します。")
         st.warning("※これはリアルタイムの運行情報を反映したものではありません。あくまで目安としてご利用ください。")
-        st.caption(f"🚀 あと {usage_limit - st.session_state.get('norikae_usage_count', 0)} 回、検索できます。応援後、リセットされます。")
+        st.caption(f"🚀 あと {usage_limit - st.session_state.get('norikae_usage_count', 0)} 回、検索できます。応援後に残り回数がリセットされます。")
 
         col1, col2 = st.columns(2)
         with col1:
