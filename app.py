@@ -50,7 +50,7 @@ with st.sidebar:
 # ★★★★★ 仕分け人は、渡す、荷物が、一つになり、より、シンプルに ★★★★★
 if st.session_state.tool_selection == "🤝 翻訳ツール":
     translator_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
-elif st.session_state.tool_selection == "💰 お小遣いレコーダー":
+elif st.session_state.tool_selection == "💰 お小遣い管理":
     okozukai_recorder_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
 elif st.session_state.tool_selection == "📅 カレンダーAI秘書":
     # 渡すキーは、Gemini APIキーだけで、十分です！
