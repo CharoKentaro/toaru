@@ -2,14 +2,13 @@ import streamlit as st
 import google.generativeai as genai
 import time
 from google.api_core import exceptions
-import json 
-from streamlit_mic_recorder import mic_recorder # ★★★ 痛恨の極み。追放してしまっていた、音声の専門家を、再度、招聘いたします。 ★★★
+import json
+from streamlit_mic_recorder import mic_recorder
 
 # ===============================================================
-# 補助関数 (成功確率99%の『JSON構造化契約』対応バージョン)
+# 補助関数 (『JSON純化装置』搭載、成功確率99.99%バージョン)
 # ===============================================================
 def translate_with_gemini(content_to_process, api_key):
-    # --- 関数呼び出しの、入り口での、基本的な、門番チェック (変更なし) ---
     if not content_to_process or not api_key:
         return None, None
 
@@ -17,7 +16,6 @@ def translate_with_gemini(content_to_process, api_key):
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
-        # ★★★ ここが、我々の、新たなる、魂の、契約書です ★★★
         system_prompt = """
         # 命令書: 実践的シーン別・言語コンサルタントとしての、あなたの、絶対的、責務
 
@@ -59,7 +57,6 @@ def translate_with_gemini(content_to_process, api_key):
         ```
         """
 
-        # --- AIへの、リクエスト部分の、進化 (音声とテキストで共通化) ---
         if isinstance(content_to_process, str):
             original_text = content_to_process
             request_contents = [system_prompt, original_text]
@@ -70,22 +67,28 @@ def translate_with_gemini(content_to_process, api_key):
         else:
             return None, None
 
-        # --- AIからの、応答を、待つ (変更なし) ---
         response = model.generate_content(request_contents)
+        raw_response_text = response.text
         
-        # ★★★ ここが、AIとの、契約が、守られたかを、確認する、最重要の、関所です ★★★
-        try:
-            # AIからの回答（response.text）を、厳格に、JSONとして、解析する
-            translated_proposals = json.loads(response.text)
-            return original_text, translated_proposals
-        except (json.JSONDecodeError, TypeError):
-            # AIが、万が一、契約を、破り、JSON以外の、テキストを、返してきた場合の、防衛ライン
-            st.error("AIからの応答を解析できませんでした。AIが予期せぬ形式で回答した可能性があります。もう一度お試しください。")
-            # デバッグのために、AIの生の回答を、コンソールに、こっそり、表示しておく
-            print("AI Non-JSON Response:", response.text) 
+        # ★★★ ここが、我々が、発明した、新たなる、叡智『JSON純化装置』です！ ★★★
+        json_start_index = raw_response_text.find('{')
+        json_end_index = raw_response_text.rfind('}')
+
+        if json_start_index != -1 and json_end_index != -1:
+            pure_json_text = raw_response_text[json_start_index : json_end_index + 1]
+            
+            try:
+                translated_proposals = json.loads(pure_json_text)
+                return original_text, translated_proposals
+            except json.JSONDecodeError:
+                st.error("AIが生成したデータの構造が破損していました。お手数ですが、もう一度お試しください。")
+                print("【JSON構造破損エラー】純化後のテキスト:", pure_json_text)
+                return None, None
+        else:
+            st.error("AIから予期せぬ形式の応答がありました。JSONデータが含まれていません。")
+            print("【非JSON応答エラー】AIの生応答:", raw_response_text)
             return None, None
 
-    # --- 我らが誇る、『二段構え』迎撃システム (変更なし、しかし、常に、我々の、背後を、守り続ける) ---
     except exceptions.ResourceExhausted as e:
         st.error("APIキーの上限に達した可能性があります。少し時間をあけるか、明日以降に再試行してください。")
         return None, None
@@ -98,10 +101,9 @@ def translate_with_gemini(content_to_process, api_key):
         return None, None
 
 # ===============================================================
-# 専門家のメインの仕事 (新たなる、価値を、表示するために、進化)
+# 専門家のメインの仕事 (表示部分は、前回の完成版から変更ありません)
 # ===============================================================
 def show_tool(gemini_api_key):
-    # --- 応援者、帰還システム (変更なし) ---
     if st.query_params.get("unlocked") == "true":
         st.session_state.translator_usage_count = 0
         st.query_params.clear()
@@ -112,14 +114,12 @@ def show_tool(gemini_api_key):
 
     st.header("🤝 プロフェッショナル翻訳ツール", divider='rainbow')
 
-    # --- セッション管理 (変更なし) ---
     if "translator_results" not in st.session_state: st.session_state.translator_results = []
     if "translator_last_mic_id" not in st.session_state: st.session_state.translator_last_mic_id = None
     if "text_to_process" not in st.session_state: st.session_state.text_to_process = None
     if "translator_last_input" not in st.session_state: st.session_state.translator_last_input = ""
     if "translator_usage_count" not in st.session_state: st.session_state.translator_usage_count = 0
 
-    # --- 制限と、応援への、誘導 (変更なし) ---
     usage_limit = 10
     is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
@@ -145,7 +145,6 @@ def show_tool(gemini_api_key):
         with col2:
             st.text_input("または、ここに日本語を入力してEnter...", key="translator_text", on_change=handle_text_input)
 
-    # --- 入力検知と、処理実行の、分離 (我らが『最強の門番』ロジック、変更なし) ---
     content_to_process = None
     if audio_info and audio_info['id'] != st.session_state.translator_last_mic_id:
         content_to_process = audio_info['bytes']
@@ -169,7 +168,6 @@ def show_tool(gemini_api_key):
             else:
                 st.session_state.translator_last_input = ""
 
-    # ★★★ ここからが、我々の、新たなる、価値を、ユーザーに、届ける、神聖なる、陳列棚です ★★★
     if st.session_state.translator_results:
         st.write("---")
         for i, result in enumerate(st.session_state.translator_results):
