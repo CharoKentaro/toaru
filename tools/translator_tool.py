@@ -6,7 +6,7 @@ import json
 from streamlit_mic_recorder import mic_recorder
 
 # ===============================================================
-# 補助関数 (『JSON純化装置』搭載、成功確率99.99%バージョン)
+# 補助関数 (『二段階認証プロセス』搭載、最終完成形)
 # ===============================================================
 def translate_with_gemini(content_to_process, api_key):
     if not content_to_process or not api_key:
@@ -16,70 +16,88 @@ def translate_with_gemini(content_to_process, api_key):
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
-        system_prompt = """
-        # 命令書: 実践的シーン別・言語コンサルタントとしての、あなたの、絶対的、責務
+        # ★★★★★ ここからが、我々の、新たなる、叡智『二段階認証プロセス』です ★★★★★
 
-        あなたは、単なる、翻訳機では、断じて、ない。
-        あなたは、ユーザーの、言葉の、裏にある、意図を、深く、読み取り、それが、どのような「場面（シチュエーション）」で使われるかを、鋭く、洞察する、プロフェッショナルな、実践的、言語コンサルタントである。
+        # --- 第一段階：どんな入力形式でも、まず「日本語テキスト」に、変換する ---
+        if isinstance(content_to_process, bytes):
+            # 音声が来た場合、まず「耳の仕事（書き起こし）」に専念させる
+            with st.spinner("（あなたの声を、言葉に、変えています...）"):
+                audio_part = {"mime_type": "audio/webm", "data": content_to_process}
+                transcription_prompt = "この日本語の音声を、できる限り正確に、文字に書き起こしてください。書き起こした日本語テキストのみを回答してください。"
+                
+                transcription_response = model.generate_content([transcription_prompt, audio_part])
+                processed_text = transcription_response.text.strip()
 
-        ## あなたの、唯一無二の、任務：
-        ユーザーから渡された日本語の言葉（単語、または、文章）を、深く、解釈せよ。
-        そして、その言葉が、実際に、使われるであろう、最も、典型的で、かつ、重要な、3つの、ビジネスシーンを、想定せよ。
-        最後に、それぞれの、シーンに、最も、適した、英語表現と、その、具体的な、使用例を、以下の、JSON形式に、寸分違わず、落とし込んで、提出すること。
-
-        ## JSON出力に関する、絶対的な、契約条件：
-        あなたの回答は、必ず、以下のJSON構造に、厳密に、従うこと。
-        このJSONオブジェクト以外の、いかなるテキスト（挨拶、前置き、後書き、Markdownの`json`タグなど）も、絶対に、絶対に、含めてはならない。
-
-        ```json
-        {
-          "proposals": [
-            {
-              "situation": "ここに、想定される1つ目の具体的なビジネスシーンを記述します。（例：親しい同僚への、カジュアルな朝の挨拶）",
-              "phrase": "ここに、そのシーンに最適な、中心となる英語表現（フレーズ）を記述します。",
-              "example_sentence": "ここに、上記のフレーズを使った、そのまま使える、具体的な英語の例文を記述します。",
-              "explanation": "なぜ、このフレーズが、このシーンに、最適なのか。その文化的背景や、相手に与える印象を、簡潔に、しかし、深く、解説します。"
-            },
-            {
-              "situation": "ここに、想定される2つ目の、異なるビジネスシーンを記述します。（例：顧客や上司への、フォーマルなメールの書き出し）",
-              "phrase": "ここに、そのシーンに最適な、中心となる英語表現（フレーズ）を記述します。",
-              "example_sentence": "ここに、上記のフレーズを使った、そのまま使える、具体的な英語の例文を記述します。",
-              "explanation": "1つ目の候補との、明確な違いや、この表現を選ぶことの、戦略的な、メリットを、解説します。"
-            },
-            {
-              "situation": "ここに、想定される3つ目の、さらに異なるビジネスシーンを記述します。（例：会議やプレゼンテーションの、冒頭での、大勢への挨拶）",
-              "phrase": "ここに、そのシーンに最適な、中心となる英語表現（フレーズ）を記述します。",
-              "example_sentence": "ここに、上記のフレーズを使った、そのまま使える、具体的な英語の例文を記述します。",
-              "explanation": "この表現が、持つ、特殊な、ニュアンスや、プロフェッショナルな、印象を、与えるための、ヒントを、解説します。"
-            }
-          ]
-        }
-        ```
-        """
-
-        if isinstance(content_to_process, str):
-            original_text = content_to_process
-            request_contents = [system_prompt, original_text]
-        elif isinstance(content_to_process, bytes):
-            original_text = "(音声入力)"
-            audio_part = {"mime_type": "audio/webm", "data": content_to_process}
-            request_contents = [system_prompt, "この日本語の音声を解釈し、提案してください:", audio_part]
-        else:
-            return None, None
-
-        response = model.generate_content(request_contents)
-        raw_response_text = response.text
+            if not processed_text:
+                st.error("あなたの声を、言葉に、変えることができませんでした。マイクの、設定を、確認するか、もう一度、お試しください。")
+                return None, None
+            
+            # ユーザーに「AIが、こう、聞き取った」と、明確に、示すための、表示用テキスト
+            original_input_display = f"{processed_text} (🎙️音声より)"
         
-        # ★★★ ここが、我々が、発明した、新たなる、叡智『JSON純化装置』です！ ★★★
+        elif isinstance(content_to_process, str):
+            # テキストが来た場合は、そのまま、使う
+            processed_text = content_to_process
+            original_input_display = processed_text
+        else:
+            return None, None # 万が一の、保険
+
+        # --- 第二段階：得られた「日本語テキスト」を使い、「脳の仕事（提案生成）」に専念させる ---
+        # スピナーを、提案生成用に、改めて、表示します
+        with st.spinner("AIが様々なビジネスシーンを想定し、最適な表現を考えています..."):
+            system_prompt = """
+            # 命令書: 実践的シーン別・言語コンサルタントとしての、あなたの、絶対的、責務
+
+            あなたは、単なる、翻訳機では、断じて、ない。
+            あなたは、ユーザーの、言葉の、裏にある、意図を、深く、読み取り、それが、どのような「場面（シチュエーション）」で使われるかを、鋭く、洞察する、プロフェッショナルな、実践的、言語コンサルタントである。
+
+            ## あなたの、唯一無二の、任務：
+            ユーザーから渡された日本語の言葉（単語、または、文章）を、深く、解釈せよ。
+            そして、その言葉が、実際に、使われるであろう、最も、典型的で、かつ、重要な、3つの、ビジネスシーンを、想定せよ。
+            最後に、それぞれの、シーンに、最も、適した、英語表現と、その、具体的な、使用例を、以下の、JSON形式に、寸分違わず、落とし込んで、提出すること。
+
+            ## JSON出力に関する、絶対的な、契約条件：
+            あなたの回答は、必ず、以下のJSON構造に、厳密に、従うこと。
+            このJSONオブジェクト以外の、いかなるテキスト（挨拶、前置き、後書き、Markdownの`json`タグなど）も、絶対に、絶対に、含めてはならない。
+
+            ```json
+            {
+              "proposals": [
+                {
+                  "situation": "ここに、想定される1つ目の具体的なビジネスシーンを記述します。（例：親しい同僚への、カジュアルな朝の挨拶）",
+                  "phrase": "ここに、そのシーンに最適な、中心となる英語表現（フレーズ）を記述します。",
+                  "example_sentence": "ここに、上記のフレーズを使った、そのまま使える、具体的な英語の例文を記述します。",
+                  "explanation": "なぜ、このフレーズが、このシーンに、最適なのか。その文化的背景や、相手に与える印象を、簡潔に、しかし、深く、解説します。"
+                },
+                {
+                  "situation": "ここに、想定される2つ目の、異なるビジネスシーンを記述します。（例：顧客や上司への、フォーマルなメールの書き出し）",
+                  "phrase": "ここに、そのシーンに最適な、中心となる英語表現（フレーズ）を記述します。",
+                  "example_sentence": "ここに、上記のフレーズを使った、そのまま使える、具体的な英語の例文を記述します。",
+                  "explanation": "1つ目の候補との、明確な違いや、この表現を選ぶことの、戦略的な、メリットを、解説します。"
+                },
+                {
+                  "situation": "ここに、想定される3つ目の、さらに異なるビジネスシーンを記述します。（例：会議やプレゼンテーションの、冒頭での、大勢への挨拶）",
+                  "phrase": "ここに、そのシーンに最適な、中心となる英語表現（フレーズ）を記述します。",
+                  "example_sentence": "ここに、上記のフレーズを使った、そのまま使える、具体的な英語の例文を記述します。",
+                  "explanation": "この表現が、持つ、特殊な、ニュアンスや、プロフェッショナルな、印象を、与えるための、ヒントを、解説します。"
+                }
+              ]
+            }
+            ```
+            """
+            request_contents = [system_prompt, processed_text]
+            response = model.generate_content(request_contents)
+            raw_response_text = response.text
+        
+        # --- ここからは、我らが信頼する『JSON純化装置』が、完璧に、仕事をする (変更なし) ---
         json_start_index = raw_response_text.find('{')
         json_end_index = raw_response_text.rfind('}')
 
         if json_start_index != -1 and json_end_index != -1:
             pure_json_text = raw_response_text[json_start_index : json_end_index + 1]
-            
             try:
                 translated_proposals = json.loads(pure_json_text)
-                return original_text, translated_proposals
+                return original_input_display, translated_proposals
             except json.JSONDecodeError:
                 st.error("AIが生成したデータの構造が破損していました。お手数ですが、もう一度お試しください。")
                 print("【JSON構造破損エラー】純化後のテキスト:", pure_json_text)
@@ -101,7 +119,7 @@ def translate_with_gemini(content_to_process, api_key):
         return None, None
 
 # ===============================================================
-# 専門家のメインの仕事 (表示部分は、前回の完成版から変更ありません)
+# 専門家のメインの仕事 (表示部分は、我々の、美しい、設計思想により、一切の、変更不要です！)
 # ===============================================================
 def show_tool(gemini_api_key):
     if st.query_params.get("unlocked") == "true":
@@ -158,8 +176,8 @@ def show_tool(gemini_api_key):
         if not gemini_api_key:
             st.error("サイドバーでGemini APIキーを設定してください。")
         else:
-            with st.spinner("AIが様々なビジネスシーンを想定し、最適な表現を考えています..."):
-                original, proposals_data = translate_with_gemini(content_to_process, gemini_api_key)
+            # ★★★ spinnerを補助関数の中に移動させたため、ここはシンプルになりました ★★★
+            original, proposals_data = translate_with_gemini(content_to_process, gemini_api_key)
             
             if proposals_data and "proposals" in proposals_data:
                 st.session_state.translator_usage_count += 1
@@ -173,7 +191,7 @@ def show_tool(gemini_api_key):
         for i, result in enumerate(st.session_state.translator_results):
             with st.container(border=True):
                 st.markdown(f"#### 履歴 No.{len(st.session_state.translator_results) - i}")
-                st.markdown(f"**🇯🇵 あなたの入力:** {result['original']}")
+                st.markdown(f"**🇯🇵 あなたの入力:** {result['original']}") # ← ここが魔法です！(🎙️音声より)も自動で表示されます
                 st.write("---")
                 
                 if "proposals" in result and isinstance(result["proposals"], list):
