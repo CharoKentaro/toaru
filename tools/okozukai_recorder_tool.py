@@ -7,7 +7,7 @@ import pandas as pd
 from datetime import datetime
 import time
 
-# --- このツール専用のプロンプト (変更なし) ---
+# --- このツール専用のプロンプト ---
 GEMINI_PROMPT = """
 あなたは、レシートの画像を直接解析する、超優秀な経理アシスタントAIです。
 # 指示
@@ -29,7 +29,7 @@ GEMINI_PROMPT = """
 }
 """
 
-# --- このツール専用の関数 (変更なし) ---
+# --- このツール専用の関数 ---
 def calculate_remaining_balance(monthly_allowance, total_spent):
     return monthly_allowance - total_spent
 
@@ -67,7 +67,7 @@ def show_tool(gemini_api_key):
         st.session_state[f"{prefix}all_receipts"] = localS.getItem("okozukai_all_receipt_data") or []
         st.session_state[f"{prefix}initialized"] = True
     
-    # ★★★ ここが、我々の、最終結論！【門番の、存在保証】です！ ★★★
+    # --- 【門番の、存在保証】 ---
     if f"{prefix}usage_count" not in st.session_state:
         st.session_state[f"{prefix}usage_count"] = 0
 
@@ -82,7 +82,7 @@ def show_tool(gemini_api_key):
         st.link_button("応援ページに移動して、読み込みを続ける", portal_url, type="primary")
 
     elif st.session_state[f"{prefix}receipt_preview"]:
-        # 確認モード (変更なし)
+        # --- 確認モード ---
         st.subheader("📝 支出の確認")
         st.info("AIが読み取った内容を確認・修正し、問題なければ「確定」してください。")
         preview_data = st.session_state[f"{prefix}receipt_preview"]
@@ -123,7 +123,7 @@ def show_tool(gemini_api_key):
             st.rerun()
             
     else:
-        # 通常モード (上限に達していない場合)
+        # --- 通常モード ---
         st.info("レシートを登録して、今月使えるお金を管理しよう！")
         st.caption(f"🚀 あと {usage_limit - st.session_state.get(f'{prefix}usage_count', 0)} 回、レシートを読み込めます。応援後、リセットされます。")
 
@@ -134,7 +134,10 @@ def show_tool(gemini_api_key):
                     st.session_state[f"{prefix}monthly_allowance"] = new_allowance
                     localS.setItem("okozukai_monthly_allowance", new_allowance, key=f"{prefix}storage_allowance")
                     st.success(f"今月のお小遣いを {new_allowance:,.0f} 円に設定しました！")
-                    time.sleep(1)
+                    
+                    # ★★★ 最高の、おもてなしは『速度』。1秒の、待ちは、もはや、不要です ★★★
+                    # time.sleep(1) 
+                    
                     st.rerun()
         
         st.divider()
@@ -170,7 +173,6 @@ def show_tool(gemini_api_key):
                             cleaned_text = gemini_response.text.strip().replace("```json", "```").replace("```", "")
                             extracted_data = json.loads(cleaned_text)
                         
-                        # --- 【通行料の徴収】 ---
                         st.session_state[f"{prefix}usage_count"] += 1
 
                         st.session_state[f"{prefix}receipt_preview"] = {"total_amount": float(extracted_data.get("total_amount", 0)), "items": extracted_data.get("items", [])}
