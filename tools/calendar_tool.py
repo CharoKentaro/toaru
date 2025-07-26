@@ -109,7 +109,7 @@ def show_tool(gemini_api_key):
             st.markdown(message["content"])
 
     # --- 【運命の分岐路】(UIとロジックの完全なる調和) ---
-    usage_limit = 2
+    usage_limit = 5
     is_limit_reached = st.session_state.get("cal_usage_count", 0) >= usage_limit
 
     st.write("---")
