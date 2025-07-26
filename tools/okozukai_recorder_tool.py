@@ -72,7 +72,7 @@ def show_tool(gemini_api_key):
         st.session_state[f"{prefix}usage_count"] = 0
 
     # --- 【運命の、分岐路】 ---
-    usage_limit = 2  # テストのため、2回に設定
+    usage_limit = 5  # テストのため、2回に設定
     is_limit_reached = st.session_state.get(f"{prefix}usage_count", 0) >= usage_limit
 
     if is_limit_reached:
