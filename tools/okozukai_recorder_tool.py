@@ -48,16 +48,41 @@ def show_tool(gemini_api_key):
     except Exception as e:
         st.error(f"🚨 重大なエラー：ローカルストレージの初期化に失敗しました。エラー詳細: {e}")
         st.stop()
+        
+    # --- 【帰還者の祝福】 ---
+    if st.query_params.get("unlocked") == "true":
+        st.session_state[f"okozukai_usage_count"] = 0
+        st.query_params.clear()
+        st.toast("おかえりなさい！レシートの読み込み回数がリセットされました。")
+        st.balloons()
+        time.sleep(1)
+        st.rerun()
 
     prefix = "okozukai_"
+    # --- 既存の初期化 ---
     if f"{prefix}initialized" not in st.session_state:
         st.session_state[f"{prefix}monthly_allowance"] = float(localS.getItem("okozukai_monthly_allowance") or 0.0)
         st.session_state[f"{prefix}total_spent"] = float(localS.getItem("okozukai_total_spent") or 0.0)
         st.session_state[f"{prefix}receipt_preview"] = None
         st.session_state[f"{prefix}all_receipts"] = localS.getItem("okozukai_all_receipt_data") or []
         st.session_state[f"{prefix}initialized"] = True
+    
+    # ★★★ ここが、我々の、最終結論！【門番の、存在保証】です！ ★★★
+    if f"{prefix}usage_count" not in st.session_state:
+        st.session_state[f"{prefix}usage_count"] = 0
 
-    if st.session_state[f"{prefix}receipt_preview"]:
+    # --- 【運命の、分岐路】 ---
+    usage_limit = 2  # テストのため、2回に設定
+    is_limit_reached = st.session_state.get(f"{prefix}usage_count", 0) >= usage_limit
+
+    if is_limit_reached:
+        st.success("🎉 たくさんのご利用、ありがとうございます！")
+        st.info("このツールが、あなたの、家計管理の、一助となれば幸いです。\n\n下のボタンから応援ページに移動することで、レシートの読み込みを続けることができます。")
+        portal_url = "https://experiment-site.pray-power-is-god-and-cocoro.com/continue.html"
+        st.link_button("応援ページに移動して、読み込みを続ける", portal_url, type="primary")
+
+    elif st.session_state[f"{prefix}receipt_preview"]:
+        # 確認モード (変更なし)
         st.subheader("📝 支出の確認")
         st.info("AIが読み取った内容を確認・修正し、問題なければ「確定」してください。")
         preview_data = st.session_state[f"{prefix}receipt_preview"]
@@ -96,8 +121,12 @@ def show_tool(gemini_api_key):
         if cancel_col.button("❌ キャンセル", use_container_width=True):
             st.session_state[f"{prefix}receipt_preview"] = None
             st.rerun()
+            
     else:
+        # 通常モード (上限に達していない場合)
         st.info("レシートを登録して、今月使えるお金を管理しよう！")
+        st.caption(f"🚀 あと {usage_limit - st.session_state.get(f'{prefix}usage_count', 0)} 回、レシートを読み込めます。応援後、リセットされます。")
+
         with st.expander("💳 今月のお小遣い設定", expanded=(st.session_state[f"{prefix}monthly_allowance"] == 0)):
              with st.form(key=f"{prefix}allowance_form"):
                 new_allowance = st.number_input("今月のお小遣いを入力してください", value=st.session_state[f"{prefix}monthly_allowance"], step=1000.0, min_value=0.0)
@@ -107,6 +136,7 @@ def show_tool(gemini_api_key):
                     st.success(f"今月のお小遣いを {new_allowance:,.0f} 円に設定しました！")
                     time.sleep(1)
                     st.rerun()
+        
         st.divider()
         st.subheader("📊 現在の状況")
         current_allowance = st.session_state[f"{prefix}monthly_allowance"]
@@ -122,6 +152,7 @@ def show_tool(gemini_api_key):
             progress_ratio = min(current_spent / current_allowance, 1.0)
             st.progress(progress_ratio)
             st.caption(f"予算使用率: {progress_ratio * 100:.1f}%")
+        
         st.divider()
         st.subheader("📸 レシートを登録する")
         uploaded_file = st.file_uploader("📁 レシート画像をアップロード", type=['png', 'jpg', 'jpeg'])
@@ -138,11 +169,16 @@ def show_tool(gemini_api_key):
                             gemini_response = model.generate_content([GEMINI_PROMPT, image])
                             cleaned_text = gemini_response.text.strip().replace("```json", "```").replace("```", "")
                             extracted_data = json.loads(cleaned_text)
+                        
+                        # --- 【通行料の徴収】 ---
+                        st.session_state[f"{prefix}usage_count"] += 1
+
                         st.session_state[f"{prefix}receipt_preview"] = {"total_amount": float(extracted_data.get("total_amount", 0)), "items": extracted_data.get("items", [])}
                         st.rerun()
                     except Exception as e:
                         st.error(f"❌ 解析エラー: {e}")
                         if 'gemini_response' in locals(): st.code(gemini_response.text, language="text")
+        
         st.divider()
         st.subheader("🗂️ データ管理")
         if st.session_state[f"{prefix}all_receipts"]:
