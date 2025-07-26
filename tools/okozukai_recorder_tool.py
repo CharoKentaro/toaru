@@ -1,5 +1,3 @@
-# tools/okozukai_recorder_tool.py
-
 import streamlit as st
 import google.generativeai as genai
 from streamlit_local_storage import LocalStorage
@@ -9,7 +7,7 @@ import pandas as pd
 from datetime import datetime
 import time
 
-# --- このツール専用のプロンプト ---
+# --- このツール専用のプロンプト (変更なし) ---
 GEMINI_PROMPT = """
 あなたは、レシートの画像を直接解析する、超優秀な経理アシスタントAIです。
 # 指示
@@ -31,7 +29,7 @@ GEMINI_PROMPT = """
 }
 """
 
-# --- このツール専用の関数 ---
+# --- このツール専用の関数 (変更なし) ---
 def calculate_remaining_balance(monthly_allowance, total_spent):
     return monthly_allowance - total_spent
 
@@ -63,10 +61,7 @@ def show_tool(gemini_api_key):
         st.subheader("📝 支出の確認")
         st.info("AIが読み取った内容を確認・修正し、問題なければ「確定」してください。")
         preview_data = st.session_state[f"{prefix}receipt_preview"]
-        corrected_amount = st.number_input(
-            "AIが読み取った合計金額はこちらです。必要なら修正してください。",
-            value=preview_data['total_amount'], min_value=0.0, step=1.0, key=f"{prefix}correction_input"
-        )
+        corrected_amount = st.number_input("AIが読み取った合計金額はこちらです。必要なら修正してください。", value=preview_data['total_amount'], min_value=0.0, step=1.0, key=f"{prefix}correction_input")
         st.write("📋 **品目リスト（直接編集できます）**")
         if preview_data['items']:
             df_items = pd.DataFrame(preview_data['items'])
@@ -90,9 +85,9 @@ def show_tool(gemini_api_key):
         if confirm_col.button("💰 この金額で支出を確定する", type="primary", use_container_width=True):
             new_receipt_record = {"date": datetime.now().strftime('%Y-%m-%d %H:%M'), "total_amount": corrected_amount, "items": edited_df.to_dict('records')}
             st.session_state[f"{prefix}all_receipts"].append(new_receipt_record)
-            localS.setItem("okozukai_all_receipt_data", st.session_state[f"{prefix}all_receipts"])
+            localS.setItem("okozukai_all_receipt_data", st.session_state[f"{prefix}all_receipts"], key=f"{prefix}storage_receipts")
             st.session_state[f"{prefix}total_spent"] += corrected_amount
-            localS.setItem("okozukai_total_spent", st.session_state[f"{prefix}total_spent"])
+            localS.setItem("okozukai_total_spent", st.session_state[f"{prefix}total_spent"], key=f"{prefix}storage_spent")
             st.session_state[f"{prefix}receipt_preview"] = None
             st.success(f"🎉 {corrected_amount:,.0f} 円の支出を記録しました！")
             st.balloons()
@@ -108,7 +103,7 @@ def show_tool(gemini_api_key):
                 new_allowance = st.number_input("今月のお小遣いを入力してください", value=st.session_state[f"{prefix}monthly_allowance"], step=1000.0, min_value=0.0)
                 if st.form_submit_button("この金額で設定する", use_container_width=True):
                     st.session_state[f"{prefix}monthly_allowance"] = new_allowance
-                    localS.setItem("okozukai_monthly_allowance", new_allowance)
+                    localS.setItem("okozukai_monthly_allowance", new_allowance, key=f"{prefix}storage_allowance")
                     st.success(f"今月のお小遣いを {new_allowance:,.0f} 円に設定しました！")
                     time.sleep(1)
                     st.rerun()
@@ -164,13 +159,13 @@ def show_tool(gemini_api_key):
         if c1.button("支出履歴のみリセット", use_container_width=True):
             st.session_state[f"{prefix}total_spent"] = 0.0
             st.session_state[f"{prefix}all_receipts"] = []
-            localS.setItem("okozukai_total_spent", 0.0)
-            localS.setItem("okozukai_all_receipt_data", [])
+            localS.setItem("okozukai_total_spent", 0.0, key=f"{prefix}storage_reset_spent")
+            localS.setItem("okozukai_all_receipt_data", [], key=f"{prefix}storage_reset_receipts")
             st.success("支出履歴をリセットしました！"); time.sleep(1); st.rerun()
         if c2.button("⚠️ 全データ完全初期化", use_container_width=True, help="予算設定も含め、このツールの全データを消去します。"):
-            localS.setItem("okozukai_monthly_allowance", 0.0)
-            localS.setItem("okozukai_total_spent", 0.0)
-            localS.setItem("okozukai_all_receipt_data", [])
+            localS.setItem("okozukai_monthly_allowance", 0.0, key=f"{prefix}storage_clear_allowance")
+            localS.setItem("okozukai_total_spent", 0.0, key=f"{prefix}storage_clear_spent")
+            localS.setItem("okozukai_all_receipt_data", [], key=f"{prefix}storage_clear_receipts")
             for key in list(st.session_state.keys()):
                 if key.startswith(prefix): del st.session_state[key]
             st.success("全データをリセットしました！"); time.sleep(1); st.rerun()
