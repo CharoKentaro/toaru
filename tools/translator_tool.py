@@ -107,7 +107,7 @@ def show_tool(gemini_api_key):
         time.sleep(1)
         st.rerun()
 
-    st.header("🤝 プロフェッショナル翻訳ツール", divider='rainbow')
+    st.header("🤝 翻訳ツール", divider='rainbow')
 
     if "translator_results" not in st.session_state: st.session_state.translator_results = []
     if "translator_last_mic_id" not in st.session_state: st.session_state.translator_last_mic_id = None
@@ -125,7 +125,7 @@ def show_tool(gemini_api_key):
         st.link_button("応援ページに移動して、翻訳を続ける", portal_url, type="primary")
     else:
         st.info("マイクで日本語を話すか、テキストボックスに入力してください。ニュアンスの異なる3つの翻訳候補を提案します。")
-        st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、提案を受けられます。応援後、リセットされます。")
+        st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、提案を受けられます。応援後、残りの回数がリセットされます。")
         with st.expander("💡 このツールのAIについて"):
             st.markdown("""
             このツールは、Googleの**Gemini 1.5 Flash**というAIモデルを使用しています。
