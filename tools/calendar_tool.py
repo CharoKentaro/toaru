@@ -5,9 +5,10 @@ from datetime import datetime
 import urllib.parse
 import pytz
 from streamlit_mic_recorder import mic_recorder
+import time # sleepのために追加
 
 # ===============================================================
-# 補助関数（シンプル化）
+# 補助関数 (変更なし)
 # ===============================================================
 def create_google_calendar_url(details):
     try:
@@ -29,29 +30,39 @@ def create_google_calendar_url(details):
     return f"{base_url}&{urllib.parse.urlencode(params, quote_via=urllib.parse.quote)}"
 
 # ===============================================================
-# 専門家のメインの仕事（Geminiによる、完全、ワンストップ体制）
+# 専門家のメインの仕事（応援システムを戴冠）
 # ===============================================================
 def show_tool(gemini_api_key):
     st.header("📅 あなただけのAI秘書", divider='rainbow')
+
+    # --- 【帰還者の祝福】 ---
+    if st.query_params.get("unlocked") == "true":
+        st.session_state["cal_usage_count"] = 0
+        st.query_params.clear()
+        st.toast("おかえりなさい！音声入力の回数がリセットされました。")
+        st.balloons()
+        time.sleep(1)
+        st.rerun()
 
     # --- 状態管理の初期化 ---
     if "cal_messages" not in st.session_state:
         st.session_state.cal_messages = [{"role": "assistant", "content": "こんにちは！ご予定を、下の方法でお伝えください。"}]
     if "cal_last_mic_id" not in st.session_state: st.session_state.cal_last_mic_id = None
     if "cal_last_file_name" not in st.session_state: st.session_state.cal_last_file_name = None
+    
+    # --- 【門番の存在保証】 ---
+    if "cal_usage_count" not in st.session_state:
+        st.session_state.cal_usage_count = 0
 
-    # --- 音声処理とAI処理を、一つに、統合 ---
+    # --- 統合AI処理関数 (変更なし) ---
     def process_input(user_input):
         with st.chat_message("assistant"):
             if not gemini_api_key:
                 st.error("サイドバーでGemini APIキーを設定してください。")
                 return
-
             try:
                 genai.configure(api_key=gemini_api_key)
                 model = genai.GenerativeModel('gemini-1.5-flash-latest')
-
-                # --- ★★★ ここが、我らが、叡智『二段階認証プロセス』の、輝きです ★★★ ---
                 with st.spinner("（あなたの、言葉を、解読しています...）"):
                     if isinstance(user_input, bytes):
                         audio_part = {"mime_type": "audio/webm", "data": user_input}
@@ -63,9 +74,7 @@ def show_tool(gemini_api_key):
                             return
                     else:
                         prompt_text = user_input
-                
                 st.session_state.cal_messages.append({"role": "user", "content": prompt_text})
-                
                 with st.spinner("AIが予定を組み立てています..."):
                     jst = pytz.timezone('Asia/Tokyo')
                     current_time_jst = datetime.now(jst).isoformat()
@@ -76,7 +85,7 @@ def show_tool(gemini_api_key):
                     - `end_time` が不明な場合は、`start_time` の1時間後を自動設定してください。
                     - 必ず以下のJSON形式のみで回答してください。他の言葉は一切含めないでください。
                     ```json
-                    {{ "title": "（件名）", "start_time": "YYYY-MM-DDTHH:MM:SS", "end_time": "YYYY-MM-DDTHH:MM:SS", "location": "（場所）", "details": "（詳細）" }}
+                    {{ "title": "（件名）", "start_time": "YYYY-MM-DDTHH:M:SS", "end_time": "YYYY-MM-DDTHH:MM:SS", "location": "（場所）", "details": "（詳細）" }}
                     ```
                     """
                     schedule_model = genai.GenerativeModel('gemini-1.5-flash-latest', system_instruction=system_prompt)
@@ -90,34 +99,53 @@ def show_tool(gemini_api_key):
                         except: display_start_time = "AIが日付の解析に失敗"
                     ai_response = f"""以下の内容で承りました。よろしければリンクをクリックしてカレンダーに登録してください。\n\n- **件名:** {schedule_details.get('title', '未設定')}\n- **日時:** {display_start_time}\n- **場所:** {schedule_details.get('location', '未設定')}\n- **詳細:** {schedule_details.get('details', '未設定')}\n\n[📅 Googleカレンダーにこの予定を追加する]({calendar_url})"""
                     st.session_state.cal_messages.append({"role": "assistant", "content": ai_response})
-
             except Exception as e:
-                error_message = f"AIとの通信中にエラーが発生しました: {e}"
                 st.session_state.cal_messages.append({"role": "assistant", "content": f"申し訳ありません、エラーが発生しました。({e})"})
 
-    # --- UIウィジェットの表示 ---
+    # --- UIの表示 ---
+    # チャット履歴は常に表示
     for message in st.session_state.cal_messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
+
+    # --- 【運命の分岐路】(UIとロジックの完全なる調和) ---
+    usage_limit = 2
+    is_limit_reached = st.session_state.get("cal_usage_count", 0) >= usage_limit
+
     st.write("---")
-    col1, col2 = st.columns(2)
-    with col1:
-        audio_info = mic_recorder(start_prompt="🎤 マイクで録音", stop_prompt="⏹️ 停止", key='cal_mic_recorder')
-    with col2:
-        uploaded_file = st.file_uploader("📁 音声ファイルをアップロード", type=['wav', 'mp3', 'm4a', 'flac'], key="cal_uploader")
+    if is_limit_reached:
+        st.success("🎉 たくさんの音声入力、ありがとうございます！")
+        st.info("このAI秘書が、あなたの、毎日を、少しでも、豊かにできたなら、幸いです。\n\n下のボタンから応援ページに移動することで、音声入力を続けることができます。")
+        portal_url = "https://experiment-site.pray-power-is-god-and-cocoro.com/continue.html"
+        st.link_button("応援ページに移動して、音声入力を続ける", portal_url, type="primary")
+    else:
+        st.caption(f"🚀 あと {usage_limit - st.session_state.get('cal_usage_count', 0)} 回、音声入力ができます。応援後、リセットされます。（テキスト入力は無制限です）")
+        col1, col2 = st.columns(2)
+        with col1:
+            audio_info = mic_recorder(start_prompt="🎤 マイクで録音", stop_prompt="⏹️ 停止", key='cal_mic_recorder')
+        with col2:
+            uploaded_file = st.file_uploader("📁 音声ファイルをアップロード", type=['wav', 'mp3', 'm4a', 'flac'], key="cal_uploader")
+
+    # テキスト入力は、常に、ページ下部に、存在し続けます
     text_prompt = st.chat_input("キーボードで予定を入力...", key="cal_text_input")
 
-    # --- 入力があった場合の、一度きりの、処理 ---
+    # --- 入力があった場合の処理 ---
     user_input_data = None
+    input_type_is_voice = False
+
     if text_prompt:
         user_input_data = text_prompt
-    elif audio_info and audio_info['id'] != st.session_state.cal_last_mic_id:
+    elif not is_limit_reached and audio_info and audio_info['id'] != st.session_state.cal_last_mic_id:
         st.session_state.cal_last_mic_id = audio_info['id']
         user_input_data = audio_info['bytes']
-    elif uploaded_file and uploaded_file.name != st.session_state.cal_last_file_name:
+        input_type_is_voice = True
+    elif not is_limit_reached and uploaded_file and uploaded_file.name != st.session_state.cal_last_file_name:
         st.session_state.cal_last_file_name = uploaded_file.name
         user_input_data = uploaded_file.getvalue()
+        input_type_is_voice = True
 
     if user_input_data:
+        if input_type_is_voice:
+            st.session_state.cal_usage_count += 1
         process_input(user_input_data)
         st.rerun()
