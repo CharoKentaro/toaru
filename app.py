@@ -52,6 +52,6 @@ if st.session_state.tool_selection == "🤝 翻訳ツール":
     translator_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
 elif st.session_state.tool_selection == "💰 お小遣いレコーダー":
     okozukai_recorder_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
-elif st.session_state.tool_selection == "📅 AI秘書":
+elif st.session_state.tool_selection == "📅 カレンダーAI秘書":
     # 渡すキーは、Gemini APIキーだけで、十分です！
     calendar_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
