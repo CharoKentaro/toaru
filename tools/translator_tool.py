@@ -2,7 +2,8 @@ import streamlit as st
 import google.generativeai as genai
 import time
 from google.api_core import exceptions
-import json # ★★★ AIとの、厳格な、JSON契約を、処理するための、専門家を、招聘 ★★★
+import json 
+from streamlit_mic_recorder import mic_recorder # ★★★ 痛恨の極み。追放してしまっていた、音声の専門家を、再度、招聘いたします。 ★★★
 
 # ===============================================================
 # 補助関数 (成功確率99%の『JSON構造化契約』対応バージョン)
@@ -123,17 +124,14 @@ def show_tool(gemini_api_key):
     is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
     if is_limit_reached:
-        # (この部分のコードは、一切の変更がありません)
         st.success("🎉 たくさんのご利用、ありがとうございます！")
         st.info("このツールが、あなたの世界を広げる一助となれば幸いです。\n\n下のボタンから応援ページに移動することで、翻訳を続けることができます。")
         portal_url = "https://experiment-site.pray-power-is-god-and-cocoro.com/continue.html"
         st.link_button("応援ページに移動して、翻訳を続ける", portal_url, type="primary")
     else:
-        # --- UIの、メイン部分 (変更なし) ---
         st.info("マイクで日本語を話すか、テキストボックスに入力してください。シーン別のプロフェッショナルな英語表現を3つ提案します。")
         st.caption(f"🚀 あと {usage_limit - st.session_state.translator_usage_count} 回、提案を受けられます。応援後、リセットされます。")
         with st.expander("💡 このツールのAIについて"):
-            # (この部分のコードは、一切の変更がありません)
             st.markdown("""
             このツールは、Googleの**Gemini 1.5 Flash**というAIモデルを使用しています。
             現在、このモデルには**1分あたり15回、1日あたり1,500回まで**の無料利用枠が設定されています。
@@ -162,34 +160,26 @@ def show_tool(gemini_api_key):
             st.error("サイドバーでGemini APIキーを設定してください。")
         else:
             with st.spinner("AIが様々なビジネスシーンを想定し、最適な表現を考えています..."):
-                # ★★★ ここで、受け取る、データが、「テキスト」から「提案オブジェクト」に、進化しました ★★★
                 original, proposals_data = translate_with_gemini(content_to_process, gemini_api_key)
             
-            # ★★★ 提案が、無事に、得られたか、確認します ★★★
             if proposals_data and "proposals" in proposals_data:
                 st.session_state.translator_usage_count += 1
-                # 履歴には、入力と、AIからの提案（proposals）を、丸ごと、保存します
                 st.session_state.translator_results.insert(0, {"original": original, "proposals": proposals_data["proposals"]})
                 st.rerun()
             else:
-                # 失敗した場合は、再実行できるように、入力ロックを、解除します
                 st.session_state.translator_last_input = ""
 
     # ★★★ ここからが、我々の、新たなる、価値を、ユーザーに、届ける、神聖なる、陳列棚です ★★★
     if st.session_state.translator_results:
         st.write("---")
-        # 履歴を、一つずつ、取り出して、表示します
         for i, result in enumerate(st.session_state.translator_results):
             with st.container(border=True):
                 st.markdown(f"#### 履歴 No.{len(st.session_state.translator_results) - i}")
                 st.markdown(f"**🇯🇵 あなたの入力:** {result['original']}")
                 st.write("---")
                 
-                # 提案（proposals）が、リスト形式で、存在するかを、確認します
                 if "proposals" in result and isinstance(result["proposals"], list):
-                    # 提案を、一つずつ、取り出して、表示します
                     for proposal_index, proposal in enumerate(result["proposals"]):
-                        # st.expander を使うことで、情報を、美しく、折りたたむことができます
                         with st.expander(f"**提案 {proposal_index + 1}: {proposal.get('situation', 'N/A')}**", expanded=(proposal_index == 0)):
                             st.markdown(f"##### 🗣️ このフレーズが最適です")
                             st.code(f"{proposal.get('phrase', 'N/A')}", language="markdown")
