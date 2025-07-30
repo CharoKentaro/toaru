@@ -115,7 +115,7 @@ def show_tool(gemini_api_key):
     if "translator_last_input" not in st.session_state: st.session_state.translator_last_input = ""
     if "translator_usage_count" not in st.session_state: st.session_state.translator_usage_count = 0
 
-    usage_limit = 10
+    usage_limit = 5
     is_limit_reached = st.session_state.translator_usage_count >= usage_limit
 
     audio_info = None
