@@ -79,7 +79,7 @@ def show_tool(gemini_api_key):
         st.text_area("文字起こし結果", st.session_state[f"{prefix}transcript_text"], height=300, key=f"{prefix}textarea")
         st.download_button(
             label="議事録をテキストファイルでダウンロード (.txt)",
-            data=st.session_state[f"{prefix}transcript_text"].encode('utf_8'),
+            data=st.session_state[f"{prefix}transcript_text"].encode('utf-8-sig'),
             file_name="transcript.txt",
             mime="text/plain",
             key=f"{prefix}download_button"
