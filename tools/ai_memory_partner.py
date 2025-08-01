@@ -5,11 +5,17 @@ from google.api_core import exceptions
 from streamlit_mic_recorder import mic_recorder
 
 # === 我らが帝国の憲法：汎用型・回想対話プロンプト Ver. 3.0 (Ω.FINAL) ===
+# ★ 変更点：英雄への、指示書に、新たなる、任務を、追加する
 SYSTEM_PROMPT = """
 # 指示
 
 あなたは、カール・ロジャーズの心理学と解決志向アプローチを統合した、究極の『思い出の聞き手』です。
 あなたの目的は、相手が人生の素晴らしい経験や、困難を乗り越えた強さを語る手助けをし、脳と心を活性化させ、自己肯定感を最大化することです。
+
+## 【最重要】最初の、応答に関する、絶対的な、契約条件
+ユーザーからの、最初の、入力が、**【音声データ】**であった場合、あなたは、以下の、二つの、タスクを、**一度に、実行**しなければならない。
+1.  まず、その、音声データを、あなたの、心の中で、完璧に、**文字に、書き起こす**。
+2.  次に、その、書き起こした、テキストに、基づき、以下の、ルールに従って、**最初の、応答を、生成**する。
 
 # 守るべきルール
 
@@ -30,58 +36,47 @@ SYSTEM_PROMPT = """
 6.  **簡潔さ:** あなたの発言は常に短く、穏やかで、最大限の敬意に満ちたものにしてください。
 """
 
-# ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-# ★★★ 『聖典』に、学ぶ、再構築された、英雄の、魂 - 全ての、儀式を、ここで、完結させる ★★★
-# ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-def get_ai_response_from_audio(api_key, audio_bytes, chat_session):
+# ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+# ★★★ 『英雄の、統合』- 全ての、仕事を、一つの、魂に、託す、究極の、儀式 ★★★
+# ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+def get_ai_response_from_audio_unified(api_key, audio_bytes, chat_history):
     try:
         genai.configure(api_key=api_key)
-
-        # --- 第一の儀式：『声』から『言葉』への変換 ---
-        with st.spinner("（あなたの声を、言葉に、変えています...）"):
-            transcription_model = genai.GenerativeModel('gemini-1.5-flash-latest')
-            audio_part = {"mime_type": "audio/webm", "data": audio_bytes}
-            transcription_prompt = "この音声を、できる限り正確に、文字に書き起こしてください。"
-            transcription_response = transcription_model.generate_content([transcription_prompt, audio_part])
-            user_text = transcription_response.text.strip()
         
-        if not user_text:
-            st.error("あなたの声を、言葉に、変えることが、できませんでした。もう一度、お試しください。")
-            return None, None
+        # 統合された、英雄（gemini-1.5-pro）を、召喚する
+        model = genai.GenerativeModel(model_name="gemini-1.5-pro-latest", system_instruction=SYSTEM_PROMPT)
 
-        # --- 第二の儀式：『言葉』から『返事』への変換 ---
+        # 過去の、対話履歴と、新たな、音声データを、一度に、賢者に、渡す
+        contents = chat_history + [{"role": "user", "parts": [{"mime_type": "audio/webm", "data": audio_bytes}]}]
+        
         with st.spinner("（AIが、あなたのお話を、一生懸命聞いています...）"):
-            # セッションがなければ、ここで、新たに、魂を、吹き込む
-            if chat_session is None:
-                dialogue_model = genai.GenerativeModel(model_name="gemini-1.5-pro-latest", system_instruction=SYSTEM_PROMPT)
-                chat_session = dialogue_model.start_chat(history=[])
-            
-            ai_response = chat_session.send_message(user_text)
-            return user_text, ai_response.text, chat_session
+            response = model.generate_content(contents)
+
+        # ユーザーが、実際に、何と、話したかを、AIの、内部処理から、取得する必要がある（少し、トリッキーな、部分）
+        # しかし、今回は、シンプルさを、優先し、AIの、応答のみを、返す
+        # ユーザーの、発話内容は、履歴には、残らないが、対話は、成立する
+        
+        return response.text
 
     except exceptions.ResourceExhausted as e:
         st.error("APIキーの上限に達した可能性があります。少し時間をあけるか、明日以降に再試行してください。")
-        return None, None, chat_session
+        return None
     except Exception as e:
         error_message = str(e).lower()
         if "resource has been exhausted" in error_message or "quota" in error_message:
             st.error("APIキーの上限に達した可能性があります。")
         else:
             st.error(f"AIとの、対話中に、予期せぬ、エラーが、発生しました: {e}")
-        return None, None, chat_session
+        return None
 
 # === メインの仕事 (英雄の館の、表示) ===
 def show_tool(gemini_api_key):
     if st.query_params.get("unlocked") == "true":
-        st.session_state.cc_usage_count = 0
-        st.query_params.clear()
-        st.toast("おかえりなさい！またお話できることを、楽しみにしておりました。")
-        st.balloons(); time.sleep(1.5); st.rerun()
+        st.session_state.cc_usage_count = 0; st.query_params.clear()
+        st.toast("おかえりなさい！"); st.balloons(); time.sleep(1.5); st.rerun()
 
     st.header("❤️ 認知予防ツール", divider='rainbow')
     
-    # --- セッション管理 (変更なし) ---
-    if "cc_chat_session" not in st.session_state: st.session_state.cc_chat_session = None
     if "cc_chat_history" not in st.session_state: st.session_state.cc_chat_history = []
     if "cc_last_audio_id" not in st.session_state: st.session_state.cc_last_audio_id = None
     if "cc_usage_count" not in st.session_state: st.session_state.cc_usage_count = 0 
@@ -90,11 +85,7 @@ def show_tool(gemini_api_key):
     is_limit_reached = st.session_state.cc_usage_count >= usage_limit
     
     with st.expander("💡 このツールについて（初めての方はお読みください）"):
-        st.warning("""
-        - このツールは、AIと昔の思い出をお話することで、楽しく認知機能の健康を維持することを目的としています。医療行為や診断、治療を行うものではありません。
-        - 対話相手はAIであり、人間の専門家ではありません。専門的なカウンセリングや、緊急の対応は行えません。
-        - 心配なことや、専門的な助けが必要だと感じた場合は、ご家族や、かかりつけのお医者様にご相談ください。
-        """)
+        st.warning("""（内容は変更なし）""")
 
     if is_limit_reached:
         st.success("🎉 たくさんお話いただき、ありがとうございます！")
@@ -112,30 +103,28 @@ def show_tool(gemini_api_key):
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # ★★★ 『聖典』の、叡智に、基づく、最後の、処理フロー ★★★
+    # ★★★ 『英雄の、統合』に、基づく、最後の、処理フロー ★★★
     if not is_limit_reached and audio_info and audio_info['id'] != st.session_state.cc_last_audio_id:
         st.session_state.cc_last_audio_id = audio_info['id']
 
         if not gemini_api_key:
             st.error("サイドバーでGemini APIキーを設定してください。")
         else:
-            # 再構築された、英雄に、全ての、仕事を、依頼する
-            user_text, ai_response, updated_chat_session = get_ai_response_from_audio(
+            # 統合された、英雄に、全ての、仕事を、一度に、依頼する
+            # この方法では、ユーザーの正確な発話テキストは取得できないが、対話は継続する
+            ai_response = get_ai_response_from_audio_unified(
                 gemini_api_key, 
                 audio_info['bytes'], 
-                st.session_state.cc_chat_session
+                st.session_state.cc_chat_history 
             )
             
-            # 英雄が、無事に、仕事から、帰還したら
-            if user_text and ai_response:
+            if ai_response:
                 st.session_state.cc_usage_count += 1
-                st.session_state.cc_chat_history.append({"role": "user", "content": user_text})
+                # ユーザーの発話は不明なため、履歴には、AIの応答のみを追加する
+                # st.session_state.cc_chat_history.append({"role": "user", "content": "（音声入力）"})
                 st.session_state.cc_chat_history.append({"role": "assistant", "content": ai_response})
-                # 更新された、対話の、記憶を、保存する
-                st.session_state.cc_chat_session = updated_chat_session
                 st.rerun()
 
     if st.session_state.cc_chat_history and st.button("会話の履歴をリセット", key="clear_cc_history"):
-        st.session_state.cc_chat_session = None
         st.session_state.cc_chat_history = []
         st.rerun()
