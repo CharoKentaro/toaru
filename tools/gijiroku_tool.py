@@ -33,7 +33,7 @@ def show_tool(gemini_api_key):
     if is_limit_reached:
         st.success("🎉 たくさんのご利用、ありがとうございます！")
         st.info("このツールが、あなたの、業務効率化の、一助となれば幸いです。\n\n下のボタンから応援ページに移動することで、議事録の作成を続けることができます。")
-        portal_url = "https://experiment-site.pray-power-is-god-and-cocoro.com/continue.html"
+        portal_url = "https://pray-power-is-god-and-cocoro.com/free3/continue.html"
         st.link_button("応援ページに移動して、議事録作成を続ける", portal_url, type="primary")
 
     else:
