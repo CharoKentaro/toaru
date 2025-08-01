@@ -4,7 +4,7 @@ import time
 
 # ★★★ 七人の、英雄たちが、ここに、集結します ★★★
 from tools import translator_tool, okozukai_recorder_tool, calendar_tool, gijiroku_tool, kensha_no_kioku_tool
-from tools import AI_Memory_Partner # ★ 変更点：英雄の、正式名称での、召喚
+from tools import ai_memory_partner # ★ 変更点：英雄の、正式名称での、召喚
 
 # --- アプリの基本設定 (変更なし) ---
 st.set_page_config(page_title="Multi-Tool Portal", page_icon="🚀", layout="wide")
@@ -46,7 +46,7 @@ with st.sidebar:
 
 # ★★★★★ 『偉大なる、仕分け人』の、最終契約書 ★★★★★
 if st.session_state.tool_selection == "❤️ 認知予防ツール": # ★ 変更点：契約書を、正式な表示名に合わせる
-    AI_Memory_Partner.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
+    ai_memory_partner.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
 elif st.session_state.tool_selection == "🤝 翻訳ツール":
     translator_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
 elif st.session_state.tool_selection == "💰 お小遣い管理":
