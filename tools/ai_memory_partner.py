@@ -101,7 +101,7 @@ def show_tool(gemini_api_key):
     if "cc_last_input" not in st.session_state: st.session_state.cc_last_input = ""
     if "cc_usage_count" not in st.session_state: st.session_state.cc_usage_count = 0
 
-    usage_limit = 10
+    usage_limit = 2
     is_limit_reached = st.session_state.cc_usage_count >= usage_limit
 
     audio_info = None
