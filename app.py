@@ -1,18 +1,8 @@
 import streamlit as st
-import time
-# ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-# ★★★ 『聖なる地図』の魔法 - これが、最後の、鍵となる ★★★
-# ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-# ----------------------------------------------------
-
 from streamlit_local_storage import LocalStorage
-
-# ★★★ 七人の、英雄たちが、ここに、集結します ★★★
+import time
+# ★★★ 六人の、英雄たちが、ここに、集結します ★★★
 from tools import translator_tool, okozukai_recorder_tool, calendar_tool, gijiroku_tool, kensha_no_kioku_tool
-from tools import AI_Memory_Partner # これで、必ず、召喚できる
 
 # --- アプリの基本設定 (変更なし) ---
 st.set_page_config(page_title="Multi-Tool Portal", page_icon="🚀", layout="wide")
@@ -22,15 +12,15 @@ with st.sidebar:
     st.title("🚀 Multi-Tool Portal")
     st.divider()
 
-    # ★★★ 選択肢は、七つに ★★★
+    # ★★★ 選択肢は、六つに ★★★
     tool_selection = st.radio(
         "利用するツールを選択してください:",
-        ("❤️ 認知予防ツール", "🤝 翻訳ツール", "💰 お小遣い管理", "📅 カレンダーAI秘書", "📝 議事録作成", "🧠 賢者の記憶"),
+        ("🤝 翻訳ツール", "💰 お小遣い管理", "📅 カレンダーAI秘書", "📝 議事録作成", "🧠 賢者の記憶"),
         key="tool_selection"
     )
     st.divider()
 
-    # --- APIキー管理 (変更なし) ---
+    # --- APIキー管理 (Gemini一本化の、思想は、揺るがない) ---
     localS = LocalStorage()
     saved_key = localS.getItem("gemini_api_key")
     gemini_default = saved_key if isinstance(saved_key, str) else ""
@@ -53,9 +43,7 @@ with st.sidebar:
     st.markdown("""<div style="font-size: 0.9em;"><a href="https://aistudio.google.com/app/apikey" target="_blank">Gemini APIキーの取得はこちら</a></div>""", unsafe_allow_html=True)
 
 # ★★★★★ 『偉大なる、仕分け人』の、最終契約書 ★★★★★
-if st.session_state.tool_selection == "❤️ 認知予防ツール":
-    AI_Memory_Partner.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
-elif st.session_state.tool_selection == "🤝 翻訳ツール":
+if st.session_state.tool_selection == "🤝 翻訳ツール":
     translator_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
 elif st.session_state.tool_selection == "💰 お小遣い管理":
     okozukai_recorder_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
