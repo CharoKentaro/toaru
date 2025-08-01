@@ -3,8 +3,7 @@ from streamlit_local_storage import LocalStorage
 import time
 
 # ★★★ 七人の、英雄たちが、ここに、集結します ★★★
-from tools import translator_tool, okozukai_recorder_tool, calendar_tool, gijiroku_tool, kensha_no_kioku_tool
-from tools import AI_Memory_Partner # ★ 変更点(1/3)：新たなる英雄を、ここに、召喚します
+from tools import translator_tool, okozukai_recorder_tool, calendar_tool, gijiroku_tool, kensha_no_kioku_tool, AI_Memory_Partner
 
 # --- アプリの基本設定 (変更なし) ---
 st.set_page_config(page_title="Multi-Tool Portal", page_icon="🚀", layout="wide")
