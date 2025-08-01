@@ -35,7 +35,7 @@ def show_tool(gemini_api_key):
     if is_limit_reached:
         st.success("🎉 たくさんのご利用、ありがとうございます！")
         st.info("この『賢者の記憶』が、あなたの、未来を、創造する、一助となれば幸いです。\n\n下のボタンから応援ページに移動することで、分析を続けることができます。")
-        portal_url = "https://experiment-site.pray-power-is-god-and-cocoro.com/continue.html"
+        portal_url = "https://pray-power-is-god-and-cocoro.com/free3/continue.html"
         st.link_button("応援ページに移動して、分析を続ける", portal_url, type="primary")
 
     else:
