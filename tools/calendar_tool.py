@@ -116,7 +116,7 @@ def show_tool(gemini_api_key):
     if is_limit_reached:
         st.success("🎉 たくさんの音声入力、ありがとうございます！")
         st.info("このAI秘書が、あなたの、毎日を、少しでも、豊かにできたなら、幸いです。\n\n下のボタンから応援ページに移動することで、音声入力を続けることができます。")
-        portal_url = "https://experiment-site.pray-power-is-god-and-cocoro.com/continue.html"
+        portal_url = "https://pray-power-is-god-and-cocoro.com/free3/continue.html"
         st.link_button("応援ページに移動して、音声入力を続ける", portal_url, type="primary")
     else:
         st.caption(f"🚀 あと {usage_limit - st.session_state.get('cal_usage_count', 0)} 回、音声入力ができます。応援後、リセットされます。（テキスト入力は無制限です）")
