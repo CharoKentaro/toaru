@@ -4,6 +4,7 @@ import time
 from google.api_core import exceptions
 from streamlit_mic_recorder import mic_recorder
 
+# (SYSTEM_PROMPT と talk_with_ai 関数は、変更がないため、省略します)
 # === 我らが帝国の憲法：汎用型・回想対話プロンプト Ver. 3.0 (Ω.FINAL) ===
 SYSTEM_PROMPT = """
 # 指示
@@ -50,11 +51,7 @@ def talk_with_ai(api_key, chat_session, user_input):
 
 # === メインの仕事 (英雄の館の、表示) ===
 def show_tool(gemini_api_key):
-    # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-    # ★★★ 『帰還者の祝福』モデル、新たなる英雄への、完全なる、継承 ★★★
-    # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-    
-    # --- 帰還者の検知 ---
+    # (帰還者の検知とヘッダー、セッション管理の部分は変更なし)
     if st.query_params.get("unlocked") == "true":
         st.session_state.cc_usage_count = 0
         st.query_params.clear()
@@ -65,7 +62,6 @@ def show_tool(gemini_api_key):
 
     st.header("❤️ 認知予防ツール", divider='rainbow')
     
-    # --- セッション管理 (英雄ごとの、記憶領域) ---
     if "cc_chat_session" not in st.session_state: st.session_state.cc_chat_session = None
     if "cc_chat_history" not in st.session_state: st.session_state.cc_chat_history = []
     if "cc_last_audio_id" not in st.session_state: st.session_state.cc_last_audio_id = None
@@ -81,7 +77,6 @@ def show_tool(gemini_api_key):
         - 心配なことや、専門的な助けが必要だと感じた場合は、ご家族や、かかりつけのお医者様にご相談ください。
         """)
 
-    # --- 利用回数に応じた、画面の分岐 ---
     if is_limit_reached:
         st.success("🎉 たくさんお話いただき、ありがとうございます！")
         st.info("このツールが、あなたの心を温める一助となれば幸いです。\n\n応援ページへ移動することで、またお話を続けることができます。")
@@ -90,13 +85,7 @@ def show_tool(gemini_api_key):
     else:
         st.info("下のマイクのボタンを押して、昔の楽しかった思い出や、頑張ったお話など、なんでも自由にお話しください。")
         st.caption(f"🚀 あと {usage_limit - st.session_state.cc_usage_count} 回、お話できます。")
-
-        audio_info = mic_recorder(
-            start_prompt="🟢 話し始める (クリックして録音開始)",
-            stop_prompt="🔴 話を聞いてもらう (クリックして録音停止)",
-            key='cognitive_companion_mic',
-            format="webm"
-        )
+        audio_info = mic_recorder(start_prompt="🟢 話し始める (クリックして録音開始)", stop_prompt="🔴 話を聞いてもらう (クリックして録音停止)", key='cognitive_companion_mic', format="webm")
     
     if st.session_state.cc_chat_history:
         st.write("---")
@@ -122,6 +111,11 @@ def show_tool(gemini_api_key):
                     st.error(f"音声の文字起こし中にエラーが発生しました: {e}")
                     user_text = None
 
+            # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+            # ★★★ 水晶玉 ①：写本家の、仕事を、照らし出す ★★★
+            st.write(f"【水晶玉①：写本家の言葉】 -> `{user_text}`")
+            # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+
             if user_text:
                 st.session_state.cc_chat_history.append({"role": "user", "content": user_text})
 
@@ -131,6 +125,11 @@ def show_tool(gemini_api_key):
 
                 with st.spinner("（AIが、あなたのお話を、一生懸命聞いています...）"):
                     ai_response = talk_with_ai(gemini_api_key, st.session_state.cc_chat_session, user_text)
+
+                # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+                # ★★★ 水晶玉 ②：賢者の、返事を、照らし出す ★★★
+                st.write(f"【水晶玉②：賢者の返事】 -> `{ai_response}`")
+                # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
 
                 if ai_response:
                     st.session_state.cc_usage_count += 1
