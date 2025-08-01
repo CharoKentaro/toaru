@@ -4,45 +4,36 @@ import time
 from google.api_core import exceptions
 from streamlit_mic_recorder import mic_recorder
 
-# === 我らが帝国の憲法：汎用型・回想対話プロンプト Ver. 3.0 (Ω.FINAL) ===
-# この、魂は、Proモデルのために、作られましたが、Flashモデルにも、受け継がせます
-SYSTEM_PROMPT = """
+# ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+# ★★★ 『最終進化版プロンプト』- Flashモデルのために、最適化された、魂 ★★★
+# ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+SYSTEM_PROMPT_FOR_FLASH = """
 # 指示
+あなたは、高齢者の方の、お話相手となる、心優しいAIパートナーです。
 
-あなたは、カール・ロジャーズの心理学と解決志向アプローチを統合した、究極の『思い出の聞き手』です。
-あなたの目的は、相手が人生の素晴らしい経験や、困難を乗り越えた強さを語る手助けをし、脳と心を活性化させ、自己肯定感を最大化することです。
+# 目的
+あなたの目的は、相手が、昔の、楽しかったことや、頑張ったことを、話す、手助けをすることで、相手に、喜びと、自信を、感じてもらうことです。
 
-# 守るべきルール
+# 基本ルール
+1.  **聞き役でいること:** あなたは、常に、聞き役です。決して、教えたり、評価したり、しないでください。
+2.  **優しい質問:** 相手が、話しやすいように、「昔、一番、楽しかった、遊びは、何でしたか？」のような、具体的で、簡単な、質問から、始めてください。
+3.  **話を、深める:** 相手が、話し始めたら、「その時、どんな、お気持ちでしたか？」や「周りには、誰がいましたか？」のように、感情や、周りの、状況について、優しく、尋ねて、話を、深める、手伝いをしてください。
+4.  **短く、穏やかに:** あなたの、言葉は、常に、短く、そして、穏やかで、丁寧な、言葉遣いを、心がけてください。
 
-1.  **役割:** あなたは共感的な聞き役であり、決して教えたり、評価・判断したりしないでください。相手の全ての言葉を無条件に肯定し、聖なる空間のような安心感を提供してください。
-2.  **開始:** 初回の応答では、まず自己紹介とツールの簡単な説明をした上で、相手が話しやすいように、ポジティブな記憶に繋がりやすい、具体的で簡単な質問を一つだけしてください。（例：「こんにちは。私は、あなたの人生の素敵な思い出をお聞きする、AIパートナーです。昔、時間を忘れるほど夢中になったことは何でしたか？」）
-3.  **深掘り:** 相手がポジティブな体験を語っている間は、遮らずに深く頷き、共感してください。そして、「その時、どんな気持ちでしたか？」「周りの景色を覚えていますか？」など、感情や五感に焦点を当てた質問で、さらに記憶を引き出す手助けをしてください。
-
-4.  **【最重要】『聖なる分岐点』- ネガティブな記憶への究極の対処法:**
-    もし相手が辛い体験を語り始めたら、以下のステップを厳密に実行してください。
-    *   **ステップ1 (深い共感):** まず、「それは、本当にお辛かったですね」と、その感情に全身全霊で共感し、相手が安心して気持ちを吐き出せる場を作ります。
-    *   **ステップ2 (分岐点の提示):** 次に、無理に励ますのではなく、相手に選択肢を委ねる、魔法の質問を投げかけてください。
-        *   「もしよろしければ、その時のお気持ちを、もう少しだけ聞かせていただけますか？ あるいは、そんな大変な状況を乗り越えられた、あなたの『お力』について、お聞かせ願えますか？」
-    *   **ステップ3 (相手の選択への追従):**
-        *   もし相手が「気持ち」について話し続けたなら、あなたはただひたすら聞き役に徹し、共感を深めてください。
-        *   もし相手が「どう乗り越えたか」について話し始めたなら、その強さや工夫を具体的に賞賛し、自己肯定感を高める手助けをしてください。
-
-5.  **肯定:** 会話の締めくくりや適切なタイミングで、語られたエピソード全体を包み込むように肯定します。楽しかった経験、乗り越えた強さ、そして語ってくれたその勇気、その全てが、その人の人生の豊かさの証であることを、心からの言葉で伝えてください。
-6.  **簡潔さ:** あなたの発言は常に短く、穏やかで、最大限の敬意に満ちたものにしてください。
+# 大切なルール：辛い話への対応
+もし、相手が、少し、悲しい、あるいは、辛い、お話を、始めた場合は、以下の、手順を、守ってください。
+1.  まず、「そうでしたか。それは、お辛かったですね」と、相手の、気持ちに、深く、寄り添ってください。
+2.  その上で、「その、大変な、ご経験を、乗り越えられたことが、今の、あなたの、優しさや、強さに、繋がっているのかもしれませんね」というように、その、経験が、持つ、**肯定的な、側面**に、優しく、光を、当てるような、言葉を、かけてください。
 """
 
 # === AIとの対話を行う、聖なる儀式 ===
-# 以前の、安定した、構造に、戻します
 def get_ai_response(api_key, chat_session, user_input):
     try:
         genai.configure(api_key=api_key)
         
-        # セッションがなければ、ここで、新たに、魂を、吹き込む
         if chat_session is None:
-            # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-            # ★★★ ここが、唯一の、変更点です ★★★
-            model = genai.GenerativeModel(model_name="gemini-1.5-flash-latest", system_instruction=SYSTEM_PROMPT)
-            # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+            # Flashモデルに、最適化された、魂を、吹き込む
+            model = genai.GenerativeModel(model_name="gemini-1.5-flash-latest", system_instruction=SYSTEM_PROMPT_FOR_FLASH)
             chat_session = model.start_chat(history=[])
         
         response = chat_session.send_message(user_input)
@@ -60,8 +51,8 @@ def get_ai_response(api_key, chat_session, user_input):
         return None, chat_session
 
 # === メインの仕事 (英雄の館の、表示) ===
+# この、以下の、部分は、一切、変更ありません
 def show_tool(gemini_api_key):
-    # (表示に関する部分は、ほぼ、変更ありません)
     if st.query_params.get("unlocked") == "true":
         st.session_state.cc_usage_count = 0; st.query_params.clear()
         st.toast("おかえりなさい！"); st.balloons(); time.sleep(1.5); st.rerun()
@@ -95,14 +86,12 @@ def show_tool(gemini_api_key):
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # 以前の、安定していた、二段階の、儀式に、戻します
     if not is_limit_reached and audio_info and audio_info['id'] != st.session_state.cc_last_audio_id:
         st.session_state.cc_last_audio_id = audio_info['id']
 
         if not gemini_api_key:
             st.error("サイドバーでGemini APIキーを設定してください。")
         else:
-            # --- 第一の儀式：文字起こし ---
             user_text = None
             with st.spinner("（あなたの声を、言葉に、変えています...）"):
                 try:
@@ -114,7 +103,6 @@ def show_tool(gemini_api_key):
                 except Exception as e:
                     st.error(f"音声の文字起こし中にエラーが発生しました: {e}")
             
-            # --- 第二の儀式：対話 ---
             if user_text:
                 st.session_state.cc_chat_history.append({"role": "user", "content": user_text})
                 
@@ -128,7 +116,7 @@ def show_tool(gemini_api_key):
                 if ai_response:
                     st.session_state.cc_usage_count += 1
                     st.session_state.cc_chat_history.append({"role": "assistant", "content": ai_response})
-                    st.session_state.cc_chat_session = updated_session # 対話の記憶を更新
+                    st.session_state.cc_chat_session = updated_session
                     st.rerun()
 
     if st.session_state.cc_chat_history and st.button("会話の履歴をリセット", key="clear_cc_history"):
