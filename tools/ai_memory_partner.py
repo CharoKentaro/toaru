@@ -85,7 +85,7 @@ def show_tool(gemini_api_key, localS_object): # ★★★ 引数に、魔法使�
     if f"{prefix}last_input" not in st.session_state: st.session_state[f"{prefix}last_input"] = ""
     if f"{prefix}usage_count" not in st.session_state: st.session_state[f"{prefix}usage_count"] = 0
 
-    usage_limit = 10
+    usage_limit = 3
     is_limit_reached = st.session_state.get(f"{prefix}usage_count", 0) >= usage_limit
     audio_info = None
 
