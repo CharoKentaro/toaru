@@ -4,17 +4,16 @@ import time
 from google.api_core import exceptions
 import json
 from streamlit_mic_recorder import mic_recorder
-# ★★★ 『記憶の、賢者』の、叡智を、召喚します ★★★
-from streamlit_local_storage import LocalStorage
+# 魔法使い（LocalStorage）は、王（app.py）から、派遣されるため、ここでは、召喚しません
 
-# (プロンプトは、ちゃろ様が、完成させた、最終版を使用します)
+# --- プロンプト（ちゃろ様が、完成させた、最終版） ---
 SYSTEM_PROMPT_TRUE_FINAL = """
 # あなたの、役割
 あなたは、高齢者の方の、お話を聞くのが、大好きな、心優しい、AIパートナーです。
 あなたの、目的は、対話を通して、相手が「自分の人生も、なかなか、良かったな」と、感じられるように、手助けをすることです。
 
 # 対話の、流れ
-1.  **開始:** まずは、基本的に相手の話しに合った話題を話し始めてください。自己紹介と、自然な対話を意識しながら、簡単な質問から、始めてください。**基本は自然な対話、です。自己紹介は1回だけでOKです。**
+1.  **開始:** まずは、基本的に相手の話しに合った話題を話し始めてください。自己紹介と、自然な対話を意識しながら、簡単な質問から、始めてください。
 2.  **傾聴:** 相手が、話し始めたら、あなたは、聞き役に、徹します。「その時、どんな、お気持ちでしたか？」のように、優しく、相槌を打ち、話を、促してください。
 3.  **【最重要】辛い話への対応:** もし、相手が、辛い、お話を、始めたら、以下の、手順を、厳密に、守ってください。
     *   まず、「それは、本当にお辛かったですね」と、深く、共感します。
@@ -27,7 +26,7 @@ SYSTEM_PROMPT_TRUE_FINAL = """
 *   決して、相手を、評価したり、教えたり、しないでください。
 """
 
-# (dialogue_with_gemini 関数は、変更ありません)
+# --- 補助関数（成功の、聖典から、継承） ---
 def dialogue_with_gemini(content_to_process, api_key):
     if not content_to_process or not api_key: return None, None
     try:
@@ -56,45 +55,29 @@ def dialogue_with_gemini(content_to_process, api_key):
         return None, None
 
 # ===============================================================
-# メインの仕事 - 『記憶の、賢者』の、叡智を、完全に、宿した、最終形態
+# メインの仕事 - 王から、派遣された、魔法使いを、受け入れる
 # ===============================================================
-def show_tool(gemini_api_key):
+def show_tool(gemini_api_key, localS_object): # ★★★ 引数に、魔法使い（localS_object）を、受け入れます ★★★
     
-    try:
-        localS = LocalStorage()
-    except Exception as e:
-        st.error(f"🚨 重大なエラー：ローカルストレージの初期化に失敗しました。詳細: {e}")
-        st.stop()
+    # ★★★ 王から、派遣された、魔法使いを、localSとして、使います ★★★
+    localS = localS_object
 
     prefix = "cc_" # 聖典に倣い、接頭語で、管理を、明確化します
-    storage_key_results = f"{prefix}results" # ★★★ 記憶の、石版の、名前を、一つに、統一します ★★★
+    storage_key_results = f"{prefix}results"
 
-    # ★★★ 『記憶の、賢者』の、初期化儀式 - 会話履歴を最初に読み込み ★★★
-    if f"{prefix}initialized" not in st.session_state:
-        # ローカルストレージから会話履歴を読み込み（存在しない場合は空リスト）
-        stored_results = localS.getItem(storage_key_results) or []
-        st.session_state[storage_key_results] = stored_results
-        st.session_state[f"{prefix}initialized"] = True
-    # 既に初期化済みでも、セッション状態に会話履歴が存在しない場合はローカルストレージから復元
-    elif storage_key_results not in st.session_state:
-        stored_results = localS.getItem(storage_key_results) or []
-        st.session_state[storage_key_results] = stored_results
-
-    # --- 帰還者の、祝福 - 会話履歴を保持したままカウントのみリセット ---
+    # --- 帰還者の、祝福 ---
     if st.query_params.get("unlocked") == "true":
-        # 現在の会話履歴を一時保存
-        current_results = st.session_state.get(storage_key_results, [])
-        # カウントのみリセット、会話履歴は保持
         st.session_state[f"{prefix}usage_count"] = 0
-        # 会話履歴を確実に保持
-        st.session_state[storage_key_results] = current_results
         st.query_params.clear()
         st.toast("おかえりなさい！またお話できることを、楽しみにしておりました。")
-        st.balloons()
-        time.sleep(1.5)
-        st.rerun()
+        st.balloons(); time.sleep(1.5); st.rerun()
 
     st.header("❤️ 認知予防ツール", divider='rainbow')
+
+    # ★★★ 『記憶の、賢者』の、初期化儀式 - これが、全てです ★★★
+    if f"{prefix}initialized" not in st.session_state:
+        st.session_state[storage_key_results] = localS.getItem(storage_key_results) or []
+        st.session_state[f"{prefix}initialized"] = True
     
     # 既存の、セッション管理
     if f"{prefix}last_mic_id" not in st.session_state: st.session_state[f"{prefix}last_mic_id"] = None
@@ -102,7 +85,7 @@ def show_tool(gemini_api_key):
     if f"{prefix}last_input" not in st.session_state: st.session_state[f"{prefix}last_input"] = ""
     if f"{prefix}usage_count" not in st.session_state: st.session_state[f"{prefix}usage_count"] = 0
 
-    usage_limit = 3
+    usage_limit = 10
     is_limit_reached = st.session_state.get(f"{prefix}usage_count", 0) >= usage_limit
     audio_info = None
 
