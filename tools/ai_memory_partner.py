@@ -14,7 +14,7 @@ SYSTEM_PROMPT_TRUE_FINAL = """
 あなたの、目的は、対話を通して、相手が「自分の人生も、なかなか、良かったな」と、感じられるように、手助けをすることです。
 
 # 対話の、流れ
-1.  **開始:** まずは、基本的に相手の話しに合った話題を話し始めてください。自己紹介と、自然な対話を意識しながら、簡単な質問から、始めてください。**基本は、自然な対話です。**
+1.  **開始:** まずは、基本的に相手の話しに合った話題を話し始めてください。自己紹介と、自然な対話を意識しながら、簡単な質問から、始めてください。**基本は自然な対話、です。自己紹介は1回だけでOKです。**
 2.  **傾聴:** 相手が、話し始めたら、あなたは、聞き役に、徹します。「その時、どんな、お気持ちでしたか？」のように、優しく、相槌を打ち、話を、促してください。
 3.  **【最重要】辛い話への対応:** もし、相手が、辛い、お話を、始めたら、以下の、手順を、厳密に、守ってください。
     *   まず、「それは、本当にお辛かったですね」と、深く、共感します。
@@ -71,13 +71,23 @@ def show_tool(gemini_api_key):
 
     # ★★★ 『記憶の、賢者』の、初期化儀式 - 会話履歴を最初に読み込み ★★★
     if f"{prefix}initialized" not in st.session_state:
-        st.session_state[storage_key_results] = localS.getItem(storage_key_results) or []
+        # ローカルストレージから会話履歴を読み込み（存在しない場合は空リスト）
+        stored_results = localS.getItem(storage_key_results) or []
+        st.session_state[storage_key_results] = stored_results
         st.session_state[f"{prefix}initialized"] = True
+    # 既に初期化済みでも、セッション状態に会話履歴が存在しない場合はローカルストレージから復元
+    elif storage_key_results not in st.session_state:
+        stored_results = localS.getItem(storage_key_results) or []
+        st.session_state[storage_key_results] = stored_results
 
     # --- 帰還者の、祝福 - 会話履歴を保持したままカウントのみリセット ---
     if st.query_params.get("unlocked") == "true":
+        # 現在の会話履歴を一時保存
+        current_results = st.session_state.get(storage_key_results, [])
         # カウントのみリセット、会話履歴は保持
         st.session_state[f"{prefix}usage_count"] = 0
+        # 会話履歴を確実に保持
+        st.session_state[storage_key_results] = current_results
         st.query_params.clear()
         st.toast("おかえりなさい！またお話できることを、楽しみにしておりました。")
         st.balloons()
