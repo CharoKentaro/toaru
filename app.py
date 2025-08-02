@@ -4,7 +4,7 @@ import time
 
 # ★★★ 七人の、英雄たちが、ここに、集結します ★★★
 from tools import translator_tool, okozukai_recorder_tool, calendar_tool, gijiroku_tool, kensha_no_kioku_tool
-from tools import ai_memory_partner # ★ 変更点：英雄の『真の、名前』で、召喚します
+from tools import ai_memory_partner
 
 # --- アプリの基本設定 (変更なし) ---
 st.set_page_config(page_title="Multi-Tool Portal", page_icon="🚀", layout="wide")
@@ -22,8 +22,10 @@ with st.sidebar:
     )
     st.divider()
 
-    # --- APIキー管理 (変更なし) ---
+    # ★★★ ここで、帝国の、唯一の、魔法使いが、生まれます ★★★
     localS = LocalStorage()
+
+    # --- APIキー管理 (Gemini一本化の、思想は、揺るがない) ---
     saved_key = localS.getItem("gemini_api_key")
     gemini_default = saved_key if isinstance(saved_key, str) else ""
     if 'gemini_api_key' not in st.session_state:
@@ -35,10 +37,11 @@ with st.sidebar:
             with col1: save_button = st.form_submit_button("💾 保存", use_container_width=True)
             with col2: reset_button = st.form_submit_button("🔄 クリア", use_container_width=True)
     if save_button:
-        localS.setItem("gemini_api_key", st.session_state.gemini_api_key, key="storage_api_key_save")
+        # 聖典に倣い、setItemのkeyを削除し、信頼性を向上させます
+        localS.setItem("gemini_api_key", st.session_state.gemini_api_key)
         st.success("キーをブラウザに保存しました！"); time.sleep(1); st.rerun()
     if reset_button:
-        localS.setItem("gemini_api_key", None, key="storage_api_key_clear");
+        localS.setItem("gemini_api_key", None);
         st.session_state.gemini_api_key = ""
         st.success("キーをクリアしました。"); time.sleep(1); st.rerun()
     st.divider()
@@ -46,11 +49,13 @@ with st.sidebar:
 
 # ★★★★★ 『偉大なる、仕分け人』の、最終契約書 ★★★★★
 if st.session_state.tool_selection == "❤️ 認知予防ツール":
-    ai_memory_partner.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', '')) # ★ 変更点：英雄の『真の、名前』で、仕事を、依頼します
+    # ★★★ 王が、英雄に、信頼する、魔法使いを、派遣します ★★★
+    ai_memory_partner.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''), localS_object=localS)
 elif st.session_state.tool_selection == "🤝 翻訳ツール":
     translator_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
 elif st.session_state.tool_selection == "💰 お小遣い管理":
-    okozukai_recorder_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
+    # お小遣い管理ツールにも、唯一の、魔法使いを、派遣します
+    okozukai_recorder_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''), localS_object=localS)
 elif st.session_state.tool_selection == "📅 カレンダーAI秘書":
     calendar_tool.show_tool(gemini_api_key=st.session_state.get('gemini_api_key', ''))
 elif st.session_state.tool_selection == "📝 議事録作成":
