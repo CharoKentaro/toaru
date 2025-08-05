@@ -107,7 +107,7 @@ def show_tool(gemini_api_key):
     if f"{prefix}last_input" not in st.session_state: st.session_state[f"{prefix}last_input"] = ""
 
     # 応援機能のロジック
-    usage_limit = 1
+    usage_limit = 5
     is_limit_reached = st.session_state.get(f"{prefix}usage_count", 0) >= usage_limit
     
     # --- UIロジックの分岐 ---
