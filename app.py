@@ -131,7 +131,7 @@ if st.session_state.get("tool_selection_sidebar") == "💰 お小遣い管理":
     if key_usage_count not in app_s_main: app_s_main[key_usage_count] = 0
     if 'receipt_preview' not in st.session_state: st.session_state.receipt_preview = None
 
-    usage_limit = 1
+    usage_limit = 5
     is_limit_reached = app_s_main.get(key_usage_count, 0) >= usage_limit
 
     # --- UIロジックの分岐 ---
